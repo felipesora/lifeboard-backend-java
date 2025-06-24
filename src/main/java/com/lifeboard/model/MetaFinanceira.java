@@ -2,7 +2,6 @@ package com.lifeboard.model;
 
 import com.lifeboard.model.enums.StatusMeta;
 import jakarta.persistence.*;
-
 import java.math.BigDecimal;
 import java.time.LocalDate;
 
