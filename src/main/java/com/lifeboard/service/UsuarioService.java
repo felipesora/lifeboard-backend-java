@@ -3,8 +3,11 @@ package com.lifeboard.service;
 import com.lifeboard.exception.ResourceNotFoundException;
 import com.lifeboard.model.Usuario;
 import com.lifeboard.repository.UsuarioRepository;
+import org.springframework.stereotype.Service;
+
 import java.util.List;
 
+@Service
 public class UsuarioService extends BaseServiceImpl<Usuario, Long, UsuarioRepository> {
 
     public UsuarioService(UsuarioRepository repository) {

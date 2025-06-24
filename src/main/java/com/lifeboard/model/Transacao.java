@@ -7,6 +7,7 @@ import jakarta.persistence.*;
 import jakarta.persistence.Table;
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 
 @Entity
 @Table(name = "lb_transacoes")
@@ -28,7 +29,7 @@ public class Transacao {
     private TipoTransacao tipo; // ENTRADA ou SAIDA
 
     @Column(nullable = false)
-    private LocalDate data;
+    private LocalDateTime data;
 
     @Enumerated(EnumType.STRING)
     @Column(length = 50)
@@ -41,7 +42,7 @@ public class Transacao {
     public Transacao() {
     }
 
-    public Transacao(Long id, String descricao, BigDecimal valor, TipoTransacao tipo, LocalDate data, CategoriaTransacao categoria, Financeiro financeiro) {
+    public Transacao(Long id, String descricao, BigDecimal valor, TipoTransacao tipo, LocalDateTime data, CategoriaTransacao categoria, Financeiro financeiro) {
         this.id = id;
         this.descricao = descricao;
         this.valor = valor;
@@ -49,6 +50,11 @@ public class Transacao {
         this.data = data;
         this.categoria = categoria;
         this.financeiro = financeiro;
+    }
+
+    @PrePersist
+    protected void onCreate() {
+        this.data = LocalDateTime.now();
     }
 
     public Long getId() {
@@ -83,11 +89,11 @@ public class Transacao {
         this.tipo = tipo;
     }
 
-    public LocalDate getData() {
+    public LocalDateTime getData() {
         return data;
     }
 
-    public void setData(LocalDate data) {
+    public void setData(LocalDateTime data) {
         this.data = data;
     }
 

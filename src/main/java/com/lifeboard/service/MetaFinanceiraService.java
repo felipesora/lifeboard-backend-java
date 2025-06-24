@@ -3,9 +3,11 @@ package com.lifeboard.service;
 import com.lifeboard.exception.ResourceNotFoundException;
 import com.lifeboard.model.MetaFinanceira;
 import com.lifeboard.repository.MetaFinanceiraRepository;
+import org.springframework.stereotype.Service;
 
 import java.util.List;
 
+@Service
 public class MetaFinanceiraService extends BaseServiceImpl<MetaFinanceira, Long, MetaFinanceiraRepository> {
 
     public MetaFinanceiraService(MetaFinanceiraRepository repository) {

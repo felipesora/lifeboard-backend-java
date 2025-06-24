@@ -3,8 +3,11 @@ package com.lifeboard.service;
 import com.lifeboard.exception.ResourceNotFoundException;
 import com.lifeboard.model.Financeiro;
 import com.lifeboard.repository.FinanceiroRepository;
+import org.springframework.stereotype.Service;
+
 import java.util.List;
 
+@Service
 public class FinanceiroService extends BaseServiceImpl<Financeiro, Long, FinanceiroRepository> {
 
     public FinanceiroService(FinanceiroRepository repository) {

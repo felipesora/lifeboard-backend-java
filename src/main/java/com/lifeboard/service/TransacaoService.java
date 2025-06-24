@@ -3,9 +3,11 @@ package com.lifeboard.service;
 import com.lifeboard.exception.ResourceNotFoundException;
 import com.lifeboard.model.Transacao;
 import com.lifeboard.repository.TransacaoRepository;
+import org.springframework.stereotype.Service;
 
 import java.util.List;
 
+@Service
 public class TransacaoService extends BaseServiceImpl<Transacao, Long, TransacaoRepository> {
 
     public TransacaoService(TransacaoRepository repository) {
