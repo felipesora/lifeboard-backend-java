@@ -18,13 +18,13 @@ public class FinanceiroResponseDTO {
     private BigDecimal salarioMensal;
     @JsonProperty("id_usuario")
     private Long usuarioId;
-    private List<Transacao> transacoes;
-    private List<MetaFinanceira> metas;
+    private List<TransacaoResponseDTO> transacoes;
+    private List<MetaFinanceiraResponseDTO> metas;
 
     public FinanceiroResponseDTO() {
     }
 
-    public FinanceiroResponseDTO(Long id, BigDecimal saldoAtual, BigDecimal salarioMensal, Long usuarioId, List<Transacao> transacoes, List<MetaFinanceira> metas) {
+    public FinanceiroResponseDTO(Long id, BigDecimal saldoAtual, BigDecimal salarioMensal, Long usuarioId, List<TransacaoResponseDTO> transacoes, List<MetaFinanceiraResponseDTO> metas) {
         this.id = id;
         this.saldoAtual = saldoAtual;
         this.salarioMensal = salarioMensal;
@@ -65,19 +65,19 @@ public class FinanceiroResponseDTO {
         this.usuarioId = usuarioId;
     }
 
-    public List<Transacao> getTransacoes() {
+    public List<TransacaoResponseDTO> getTransacoes() {
         return transacoes;
     }
 
-    public void setTransacoes(List<Transacao> transacoes) {
+    public void setTransacoes(List<TransacaoResponseDTO> transacoes) {
         this.transacoes = transacoes;
     }
 
-    public List<MetaFinanceira> getMetas() {
+    public List<MetaFinanceiraResponseDTO> getMetas() {
         return metas;
     }
 
-    public void setMetas(List<MetaFinanceira> metas) {
+    public void setMetas(List<MetaFinanceiraResponseDTO> metas) {
         this.metas = metas;
     }
 }
