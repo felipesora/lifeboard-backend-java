@@ -27,7 +27,6 @@ public class TransacaoService extends BaseServiceImpl<Transacao, Long, Transacao
         transacaoExistente.setDescricao(novaTransacao.getDescricao());
         transacaoExistente.setValor(novaTransacao.getValor());
         transacaoExistente.setTipo(novaTransacao.getTipo());
-        transacaoExistente.setData(novaTransacao.getData());
         transacaoExistente.setCategoria(novaTransacao.getCategoria());
         transacaoExistente.setFinanceiro(novaTransacao.getFinanceiro());
 
