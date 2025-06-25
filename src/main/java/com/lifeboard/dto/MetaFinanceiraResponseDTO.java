@@ -6,12 +6,13 @@ import com.lifeboard.model.enums.StatusMeta;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 
-@JsonPropertyOrder({ "id_meta", "valor_meta", "data_limite", "status", "id_financeiro"})
+@JsonPropertyOrder({ "id_meta", "nome", "valor_meta", "data_limite", "status", "id_financeiro"})
 
 public class MetaFinanceiraResponseDTO {
 
     @JsonProperty("id_meta")
     private Long id;
+    private String nome;
     @JsonProperty("valor_meta")
     private BigDecimal valorMeta;
     @JsonProperty("data_limite")
@@ -23,8 +24,9 @@ public class MetaFinanceiraResponseDTO {
     public MetaFinanceiraResponseDTO() {
     }
 
-    public MetaFinanceiraResponseDTO(Long id, BigDecimal valorMeta, LocalDate dataLimite, StatusMeta status, Long idFinanceiro) {
+    public MetaFinanceiraResponseDTO(Long id, String nome, BigDecimal valorMeta, LocalDate dataLimite, StatusMeta status, Long idFinanceiro) {
         this.id = id;
+        this.nome = nome;
         this.valorMeta = valorMeta;
         this.dataLimite = dataLimite;
         this.status = status;
@@ -37,6 +39,14 @@ public class MetaFinanceiraResponseDTO {
 
     public void setId(Long id) {
         this.id = id;
+    }
+
+    public String getNome() {
+        return nome;
+    }
+
+    public void setNome(String nome) {
+        this.nome = nome;
     }
 
     public BigDecimal getValorMeta() {

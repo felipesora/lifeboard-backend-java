@@ -44,13 +44,6 @@ public class MetaFinanceira {
         this.financeiro = financeiro;
     }
 
-    @PrePersist
-    protected void onCreate() {
-        if (this.status == null) {
-            this.status = StatusMeta.EM_ANDAMENTO;
-        }
-    }
-
     public Long getId() {
         return id;
     }

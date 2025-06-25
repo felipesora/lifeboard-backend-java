@@ -10,6 +10,7 @@ public class MetaFinanceiraMapper {
     public static MetaFinanceiraResponseDTO toDTO(MetaFinanceira meta) {
         return new MetaFinanceiraResponseDTO(
                 meta.getId(),
+                meta.getNome(),
                 meta.getValorMeta(),
                 meta.getDataLimite(),
                 meta.getStatus(),
@@ -22,6 +23,7 @@ public class MetaFinanceiraMapper {
         meta.setNome(dto.getNome());
         meta.setValorMeta(dto.getValorMeta());
         meta.setDataLimite(dto.getDataLimite());
+        meta.setStatus(dto.getStatus());
         meta.setFinanceiro(financeiro);
         return meta;
     }
