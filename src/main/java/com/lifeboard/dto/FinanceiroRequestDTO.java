@@ -10,10 +10,12 @@ public class FinanceiroRequestDTO {
 
     @NotNull(message = "Saldo Atual é obrigatório.")
     @DecimalMin(value = "0.0", inclusive = false, message = "O saldo deve ser maior que zero.")
+    @JsonProperty("saldo_atual")
     private BigDecimal saldoAtual;
 
     @NotNull(message = "Salário é obrigatório.")
     @DecimalMin(value = "0.0", inclusive = false, message = "O salário deve ser maior que zero.")
+    @JsonProperty("salario_mensal")
     private BigDecimal salarioMensal;
 
     @NotNull(message = "O ID de um Usuário é obrigatório.")

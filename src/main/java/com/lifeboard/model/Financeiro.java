@@ -27,10 +27,10 @@ public class Financeiro {
     @JoinColumn(name = "id_usuario", referencedColumnName = "id_usuario", nullable = false)
     private Usuario usuario;
 
-    @OneToMany(mappedBy = "financeiro", cascade = CascadeType.ALL)
+    @OneToMany(mappedBy = "financeiro", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Transacao> transacoes;
 
-    @OneToMany(mappedBy = "financeiro", cascade = CascadeType.ALL)
+    @OneToMany(mappedBy = "financeiro", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<MetaFinanceira> metas;
 
     public Financeiro() {

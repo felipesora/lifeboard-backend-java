@@ -12,12 +12,12 @@ public class UsuarioResponseDTO {
     private String nome;
     private String email;
     private String senha;
-    private Financeiro financeiro;
+    private FinanceiroResponseDTO financeiro;
 
     public UsuarioResponseDTO() {
     }
 
-    public UsuarioResponseDTO(Long id, String nome, String email, String senha, Financeiro financeiro) {
+    public UsuarioResponseDTO(Long id, String nome, String email, String senha, FinanceiroResponseDTO financeiro) {
         this.id = id;
         this.nome = nome;
         this.email = email;
@@ -57,11 +57,11 @@ public class UsuarioResponseDTO {
         this.senha = senha;
     }
 
-    public Financeiro getFinanceiro() {
+    public FinanceiroResponseDTO getFinanceiro() {
         return financeiro;
     }
 
-    public void setFinanceiro(Financeiro financeiro) {
+    public void setFinanceiro(FinanceiroResponseDTO financeiro) {
         this.financeiro = financeiro;
     }
 }
