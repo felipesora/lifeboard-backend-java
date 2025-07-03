@@ -1,28 +1,34 @@
 package com.lifeboard.service;
 
-import com.lifeboard.exception.ResourceNotFoundException;
 import com.lifeboard.model.MetaFinanceira;
 import com.lifeboard.repository.MetaFinanceiraRepository;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
-import java.util.List;
-
 @Service
-public class MetaFinanceiraService extends BaseServiceImpl<MetaFinanceira, Long, MetaFinanceiraRepository> {
+public class MetaFinanceiraService {
 
-    public MetaFinanceiraService(MetaFinanceiraRepository repository) {
-        super(repository);
+    @Autowired
+    private MetaFinanceiraRepository repository;
+
+    public Page<MetaFinanceira> listarTodos(Pageable pageable) {
+        return repository.findAllByOrderByIdAsc(pageable);
     }
 
-    @Override
-    public List<MetaFinanceira> listarTodos() {
-        return repository.findAllByOrderByIdAsc();
+    public MetaFinanceira buscarPorId(Long id) {
+        return repository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Meta Financeira não encontrada com id: " + id));
     }
 
-    @Override
+    public MetaFinanceira salvar(MetaFinanceira entity) {
+        return repository.save(entity);
+    }
+
     public MetaFinanceira atualizar(Long id, MetaFinanceira novaMeta) {
         MetaFinanceira metaExistente = repository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("Meta Financeira não encontrada"));
+                .orElseThrow(() -> new RuntimeException("Meta Financeira não encontrada com id: " + id));
 
         metaExistente.setNome(novaMeta.getNome());
         metaExistente.setValorMeta(novaMeta.getValorMeta());
@@ -31,5 +37,13 @@ public class MetaFinanceiraService extends BaseServiceImpl<MetaFinanceira, Long,
         metaExistente.setFinanceiro(novaMeta.getFinanceiro());
 
         return repository.save(metaExistente);
+    }
+
+    public String deletar(Long id) {
+        if (repository.existsById(id)) {
+            repository.deleteById(id);
+            return "Meta Financeira deletada com sucesso!";
+        }
+        return "Erro ao deletar! Meta Financeira com " + id + " não encontrada.";
     }
 }

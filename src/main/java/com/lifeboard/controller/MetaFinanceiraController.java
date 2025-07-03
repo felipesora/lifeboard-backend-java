@@ -8,29 +8,29 @@ import com.lifeboard.model.MetaFinanceira;
 import com.lifeboard.service.FinanceiroService;
 import com.lifeboard.service.MetaFinanceiraService;
 import jakarta.validation.Valid;
+import org.springframework.data.domain.Page;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.web.PageableDefault;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-
-import java.util.List;
-import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("api/metas")
 public class MetaFinanceiraController {
 
-    private final MetaFinanceiraService metaFinanceiraService;
-    private final FinanceiroService financeiroService;
+    @Autowired
+    private MetaFinanceiraService metaFinanceiraService;
 
-    public MetaFinanceiraController(MetaFinanceiraService metaFinanceiraService, FinanceiroService financeiroService) {
-        this.metaFinanceiraService = metaFinanceiraService;
-        this.financeiroService = financeiroService;
-    }
+    @Autowired
+    private FinanceiroService financeiroService;
+
 
     @GetMapping
-    public List<MetaFinanceiraResponseDTO> listarTodos() {
-        return metaFinanceiraService.listarTodos()
-                .stream()
-                .map(MetaFinanceiraMapper::toDTO)
-                .collect(Collectors.toList());
+    public ResponseEntity<Page<MetaFinanceiraResponseDTO>> listarTodos(@PageableDefault(size = 10, page = 0, sort = {"id"}) Pageable paginacao) {
+        Page<MetaFinanceira> metas = metaFinanceiraService.listarTodos(paginacao);
+        Page<MetaFinanceiraResponseDTO> dtoPage = metas.map(MetaFinanceiraMapper::toDTO);
+        return ResponseEntity.ok(dtoPage);
     }
 
     @GetMapping("/{id}")

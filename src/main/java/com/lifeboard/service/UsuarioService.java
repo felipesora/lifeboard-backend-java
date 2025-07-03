@@ -1,28 +1,35 @@
 package com.lifeboard.service;
 
-import com.lifeboard.exception.ResourceNotFoundException;
 import com.lifeboard.model.Usuario;
 import com.lifeboard.repository.UsuarioRepository;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
-import java.util.List;
 
 @Service
-public class UsuarioService extends BaseServiceImpl<Usuario, Long, UsuarioRepository> {
+public class UsuarioService {
 
-    public UsuarioService(UsuarioRepository repository) {
-        super(repository);
+    @Autowired
+    private UsuarioRepository repository;
+
+    public Page<Usuario> listarTodos(Pageable pageable) {
+        return repository.findAllByOrderByIdAsc(pageable);
     }
 
-    @Override
-    public List<Usuario> listarTodos() {
-        return repository.findAllByOrderByIdAsc();
+    public Usuario buscarPorId(Long id) {
+        return repository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Usuário não encontrado com id: " + id));
     }
 
-    @Override
+    public Usuario salvar(Usuario entity) {
+        return repository.save(entity);
+    }
+
     public Usuario atualizar(Long id, Usuario novoUsuario) {
         Usuario usuarioExistente = repository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("Usuário não encontrado"));
+                .orElseThrow(() -> new RuntimeException("Usuário não encontrado com id: " + id));
 
         usuarioExistente.setNome(novoUsuario.getNome());
         usuarioExistente.setEmail(novoUsuario.getEmail());
@@ -30,5 +37,13 @@ public class UsuarioService extends BaseServiceImpl<Usuario, Long, UsuarioReposi
         usuarioExistente.setFinanceiro(novoUsuario.getFinanceiro());
 
         return repository.save(usuarioExistente);
+    }
+
+    public String deletar(Long id) {
+        if (repository.existsById(id)) {
+            repository.deleteById(id);
+            return "Usuário deletado com sucesso!";
+        }
+        return "Erro ao deletar! Usuário com " + id + " não encontrado.";
     }
 }

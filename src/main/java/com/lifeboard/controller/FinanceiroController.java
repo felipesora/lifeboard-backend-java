@@ -8,29 +8,29 @@ import com.lifeboard.model.Usuario;
 import com.lifeboard.service.FinanceiroService;
 import com.lifeboard.service.UsuarioService;
 import jakarta.validation.Valid;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.web.PageableDefault;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-
-import java.util.List;
-import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("api/financeiros")
 public class FinanceiroController {
 
-    private final FinanceiroService financeiroService;
-    private final UsuarioService usuarioService;
+    @Autowired
+    private FinanceiroService financeiroService;
 
-    public FinanceiroController(FinanceiroService financeiroService, UsuarioService usuarioService) {
-        this.financeiroService = financeiroService;
-        this.usuarioService = usuarioService;
-    }
+    @Autowired
+    private UsuarioService usuarioService;
+
 
     @GetMapping
-    public List<FinanceiroResponseDTO> listarTodos() {
-        return financeiroService.listarTodos()
-                .stream()
-                .map(FinanceiroMapper::toDTO)
-                .collect(Collectors.toList());
+    public ResponseEntity<Page<FinanceiroResponseDTO>> listarTodos(@PageableDefault(size = 10, page = 0, sort = {"id"}) Pageable paginacao) {
+        Page<Financeiro> financeiros = financeiroService.listarTodos(paginacao);
+        Page<FinanceiroResponseDTO> dtoPage = financeiros.map(FinanceiroMapper::toDTO);
+        return ResponseEntity.ok(dtoPage);
     }
 
     @GetMapping("/{id}")

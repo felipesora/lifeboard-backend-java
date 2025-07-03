@@ -7,6 +7,11 @@ import com.lifeboard.model.Transacao;
 import com.lifeboard.service.FinanceiroService;
 import com.lifeboard.service.TransacaoService;
 import jakarta.validation.Valid;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.web.PageableDefault;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -16,20 +21,18 @@ import java.util.stream.Collectors;
 @RequestMapping("api/transacoes")
 public class TransacaoController {
 
-    private final TransacaoService transacaoService;
-    private final FinanceiroService financeiroService;
+    @Autowired
+    private TransacaoService transacaoService;
 
-    public TransacaoController(TransacaoService transacaoService, FinanceiroService financeiroService) {
-        this.transacaoService = transacaoService;
-        this.financeiroService = financeiroService;
-    }
+    @Autowired
+    private FinanceiroService financeiroService;
+
 
     @GetMapping
-    public List<TransacaoResponseDTO> listarTodos() {
-        return transacaoService.listarTodos()
-                .stream()
-                .map(TransacaoMapper::toDTO)
-                .collect(Collectors.toList());
+    public ResponseEntity<Page<TransacaoResponseDTO>> listarTodos(@PageableDefault(size = 10, page = 0, sort = {"id"}) Pageable paginacao) {
+        Page<Transacao> transacoes = transacaoService.listarTodos(paginacao);
+        Page<TransacaoResponseDTO> dtoPage = transacoes.map(TransacaoMapper::toDTO);
+        return ResponseEntity.ok(dtoPage);
     }
 
     @GetMapping("/{id}")

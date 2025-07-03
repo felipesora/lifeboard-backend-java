@@ -6,26 +6,25 @@ import com.lifeboard.mapper.UsuarioMapper;
 import com.lifeboard.model.Usuario;
 import com.lifeboard.service.UsuarioService;
 import jakarta.validation.Valid;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.web.PageableDefault;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-import java.util.List;
-import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("api/usuarios")
 public class UsuarioController {
 
-    private final UsuarioService service;
-
-    public UsuarioController(UsuarioService service) {
-        this.service = service;
-    }
+    @Autowired
+    private UsuarioService service;
 
     @GetMapping
-    public List<UsuarioResponseDTO> listarTodos() {
-        return service.listarTodos()
-                .stream()
-                .map(UsuarioMapper::toDTO)
-                .collect(Collectors.toList());
+    public ResponseEntity<Page<UsuarioResponseDTO>> listarTodos(@PageableDefault(size = 10, page = 0, sort = {"id"}) Pageable paginacao) {
+        Page<Usuario> usuarios = service.listarTodos(paginacao);
+        Page<UsuarioResponseDTO> dtoPage = usuarios.map(UsuarioMapper::toDTO);
+        return ResponseEntity.ok(dtoPage);
     }
 
     @GetMapping("/{id}")

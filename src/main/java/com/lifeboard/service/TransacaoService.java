@@ -1,28 +1,34 @@
 package com.lifeboard.service;
 
-import com.lifeboard.exception.ResourceNotFoundException;
 import com.lifeboard.model.Transacao;
 import com.lifeboard.repository.TransacaoRepository;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
-import java.util.List;
-
 @Service
-public class TransacaoService extends BaseServiceImpl<Transacao, Long, TransacaoRepository> {
+public class TransacaoService {
 
-    public TransacaoService(TransacaoRepository repository) {
-        super(repository);
+    @Autowired
+    private TransacaoRepository repository;
+
+    public Page<Transacao> listarTodos(Pageable pageable) {
+        return repository.findAllByOrderByIdAsc(pageable);
     }
 
-    @Override
-    public List<Transacao> listarTodos() {
-        return repository.findAllByOrderByIdAsc();
+    public Transacao buscarPorId(Long id) {
+        return repository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Transação não encontrada com id: " + id));
     }
 
-    @Override
+    public Transacao salvar(Transacao entity) {
+        return repository.save(entity);
+    }
+
     public Transacao atualizar(Long id, Transacao novaTransacao) {
         Transacao transacaoExistente = repository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("Transação não encontrada"));
+                .orElseThrow(() -> new RuntimeException("Transação não encontrada com id: " + id));
 
         transacaoExistente.setDescricao(novaTransacao.getDescricao());
         transacaoExistente.setValor(novaTransacao.getValor());
@@ -31,5 +37,13 @@ public class TransacaoService extends BaseServiceImpl<Transacao, Long, Transacao
         transacaoExistente.setFinanceiro(novaTransacao.getFinanceiro());
 
         return repository.save(transacaoExistente);
+    }
+
+    public String deletar(Long id) {
+        if (repository.existsById(id)) {
+            repository.deleteById(id);
+            return "Transação deletada com sucesso!";
+        }
+        return "Erro ao deletar! Transação com " + id + " não encontrada.";
     }
 }
