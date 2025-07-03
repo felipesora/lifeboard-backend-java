@@ -44,6 +44,6 @@ public class TransacaoService {
             repository.deleteById(id);
             return "Transação deletada com sucesso!";
         }
-        return "Erro ao deletar! Transação com " + id + " não encontrada.";
+        throw new RuntimeException("Erro ao deletar! Transação com " + id + " não encontrada.");
     }
 }

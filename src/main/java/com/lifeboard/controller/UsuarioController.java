@@ -12,6 +12,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.web.PageableDefault;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.util.UriComponentsBuilder;
 
 @RestController
 @RequestMapping("api/usuarios")
@@ -28,24 +29,36 @@ public class UsuarioController {
     }
 
     @GetMapping("/{id}")
-    public UsuarioResponseDTO buscarPorId(@PathVariable Long id) {
-        return UsuarioMapper.toDTO(service.buscarPorId(id));
+    public ResponseEntity buscarPorId(@PathVariable Long id) {
+        var usuario = UsuarioMapper.toDTO(service.buscarPorId(id));
+        return ResponseEntity.ok(usuario);
     }
 
     @PostMapping
-    public UsuarioResponseDTO salvar(@RequestBody @Valid UsuarioRequestDTO dto){
-        return UsuarioMapper.toDTO(service.salvar(UsuarioMapper.toEntity(dto)));
+    public ResponseEntity salvar(@RequestBody @Valid UsuarioRequestDTO dto, UriComponentsBuilder uriBuilder) {
+        var usuario = UsuarioMapper.toDTO(service.salvar(UsuarioMapper.toEntity(dto)));
+
+        var uri = uriBuilder.path("/api/usuarios/{id}").buildAndExpand(usuario.getId()).toUri();
+
+        return ResponseEntity.created(uri).body(usuario);
     }
 
     @PutMapping("/{id}")
-    public UsuarioResponseDTO atualizar(@PathVariable Long id, @RequestBody @Valid UsuarioRequestDTO dto){
+    public ResponseEntity atualizar(@PathVariable Long id, @RequestBody @Valid UsuarioRequestDTO dto){
         Usuario usuario = UsuarioMapper.toEntity(dto);
         usuario.setId(id);
-        return UsuarioMapper.toDTO(service.atualizar(id,usuario));
+
+        Usuario atualizado = service.atualizar(id, usuario);
+
+        UsuarioResponseDTO responseDTO = UsuarioMapper.toDTO(atualizado);
+
+        return ResponseEntity.ok(responseDTO);
     }
 
     @DeleteMapping("/{id}")
-    public String deletar(@PathVariable Long id){
-        return service.deletar(id);
+    public ResponseEntity deletar(@PathVariable Long id){
+        service.deletar(id);
+
+        return ResponseEntity.noContent().build();
     }
 }

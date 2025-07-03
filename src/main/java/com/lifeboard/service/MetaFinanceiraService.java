@@ -44,6 +44,6 @@ public class MetaFinanceiraService {
             repository.deleteById(id);
             return "Meta Financeira deletada com sucesso!";
         }
-        return "Erro ao deletar! Meta Financeira com " + id + " não encontrada.";
+        throw new RuntimeException("Erro ao deletar! Meta Financeira com " + id + " não encontrada.");
     }
 }

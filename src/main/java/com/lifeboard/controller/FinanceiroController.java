@@ -14,6 +14,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.web.PageableDefault;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.util.UriComponentsBuilder;
 
 @RestController
 @RequestMapping("api/financeiros")
@@ -34,31 +35,41 @@ public class FinanceiroController {
     }
 
     @GetMapping("/{id}")
-    public FinanceiroResponseDTO buscarPorId(@PathVariable Long id) {
-        return FinanceiroMapper.toDTO(financeiroService.buscarPorId(id));
+    public ResponseEntity buscarPorId(@PathVariable Long id) {
+        var financeiro = FinanceiroMapper.toDTO(financeiroService.buscarPorId(id));
+        return ResponseEntity.ok(financeiro);
     }
 
     @PostMapping
-    public FinanceiroResponseDTO salvar(@RequestBody @Valid FinanceiroRequestDTO dto){
+    public ResponseEntity salvar(@RequestBody @Valid FinanceiroRequestDTO dto, UriComponentsBuilder uriBuilder){
         Usuario usuario = usuarioService.buscarPorId(dto.getUsuarioId());
-
         Financeiro financeiro = FinanceiroMapper.toEntity(dto, usuario);
+        var financeiroSalvo = FinanceiroMapper.toDTO(financeiroService.salvar(financeiro));
 
-        return FinanceiroMapper.toDTO(financeiroService.salvar(financeiro));
+        var uri = uriBuilder.path("/api/financeiros/{id}").buildAndExpand(financeiroSalvo.getId()).toUri();
+
+        return ResponseEntity.created(uri).body(financeiroSalvo);
     }
 
     @PutMapping("/{id}")
-    public FinanceiroResponseDTO atualizar(@PathVariable Long id, @RequestBody @Valid FinanceiroRequestDTO dto){
+    public ResponseEntity atualizar(@PathVariable Long id, @RequestBody @Valid FinanceiroRequestDTO dto){
         Usuario usuario = usuarioService.buscarPorId(dto.getUsuarioId());
 
-        Financeiro financeiro = FinanceiroMapper.toEntity(dto, usuario);
-        financeiro.setId(id);
+        Financeiro existente = financeiroService.buscarPorId(id);
 
-        return FinanceiroMapper.toDTO(financeiroService.atualizar(id,financeiro));
+        existente.setSaldoAtual(dto.getSaldoAtual());
+        existente.setSalarioMensal(dto.getSalarioMensal());
+        existente.setUsuario(usuario);
+
+        Financeiro atualizado = financeiroService.atualizar(id, existente);
+
+        return ResponseEntity.ok(FinanceiroMapper.toDTO(atualizado));
     }
 
     @DeleteMapping("/{id}")
-    public String deletar(@PathVariable Long id){
-        return financeiroService.deletar(id);
+    public ResponseEntity deletar(@PathVariable Long id){
+        financeiroService.deletar(id);
+
+        return ResponseEntity.noContent().build();
     }
 }

@@ -44,6 +44,6 @@ public class UsuarioService {
             repository.deleteById(id);
             return "Usuário deletado com sucesso!";
         }
-        return "Erro ao deletar! Usuário com " + id + " não encontrado.";
+        throw new RuntimeException("Usuário com id " + id + " não encontrado.");
     }
 }

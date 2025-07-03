@@ -1,7 +1,9 @@
 package com.lifeboard.service;
 
 import com.lifeboard.model.Financeiro;
+import com.lifeboard.model.Usuario;
 import com.lifeboard.repository.FinanceiroRepository;
+import jakarta.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -41,11 +43,29 @@ public class FinanceiroService {
         return repository.save(financeiroExistente);
     }
 
+    @Transactional
     public String deletar(Long id) {
-        if (repository.existsById(id)) {
-            repository.deleteById(id);
-            return "Financeiro deletado com sucesso!";
+        Financeiro financeiro = buscarPorId(id);
+
+        // Quebra o vínculo com o usuário
+        Usuario usuario = financeiro.getUsuario();
+        if (usuario != null) {
+            usuario.setFinanceiro(null); // remove o vínculo
         }
-        return "Erro ao deletar! Financeiro com " + id + " não encontrado.";
+
+        // Remove filhos para garantir o orphanRemoval
+        if (financeiro.getTransacoes() != null) {
+            financeiro.getTransacoes().clear();
+        }
+
+        if (financeiro.getMetas() != null) {
+            financeiro.getMetas().clear();
+        }
+
+        repository.save(financeiro); // atualiza estado
+
+        repository.delete(financeiro); // agora pode deletar
+
+        return "Financeiro deletado com sucesso!";
     }
 }

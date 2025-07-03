@@ -14,6 +14,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.web.PageableDefault;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.util.UriComponentsBuilder;
 
 @RestController
 @RequestMapping("api/metas")
@@ -34,31 +35,39 @@ public class MetaFinanceiraController {
     }
 
     @GetMapping("/{id}")
-    public MetaFinanceiraResponseDTO buscarPorId(@PathVariable Long id) {
-        return MetaFinanceiraMapper.toDTO(metaFinanceiraService.buscarPorId(id));
+    public ResponseEntity buscarPorId(@PathVariable Long id) {
+        var meta = MetaFinanceiraMapper.toDTO(metaFinanceiraService.buscarPorId(id));
+        return ResponseEntity.ok(meta);
     }
 
     @PostMapping
-    public MetaFinanceiraResponseDTO salvar(@RequestBody @Valid MetaFinanceiraRequestDTO dto){
+    public ResponseEntity salvar(@RequestBody @Valid MetaFinanceiraRequestDTO dto, UriComponentsBuilder uriBuilder){
         Financeiro financeiro = financeiroService.buscarPorId(dto.getIdFinanceiro());
-
         MetaFinanceira meta = MetaFinanceiraMapper.toEntity(dto, financeiro);
 
-        return MetaFinanceiraMapper.toDTO(metaFinanceiraService.salvar(meta));
+        var metaSalva = MetaFinanceiraMapper.toDTO(metaFinanceiraService.salvar(meta));
+
+        var uri = uriBuilder.path("/api/metas/{id}").buildAndExpand(metaSalva.getId()).toUri();
+
+        return ResponseEntity.created(uri).body(metaSalva);
     }
 
     @PutMapping("/{id}")
-    public MetaFinanceiraResponseDTO atualizar(@PathVariable Long id, @RequestBody @Valid MetaFinanceiraRequestDTO dto){
+    public ResponseEntity atualizar(@PathVariable Long id, @RequestBody @Valid MetaFinanceiraRequestDTO dto){
         Financeiro financeiro = financeiroService.buscarPorId(dto.getIdFinanceiro());
-
         MetaFinanceira meta = MetaFinanceiraMapper.toEntity(dto, financeiro);
         meta.setId(id);
 
-        return MetaFinanceiraMapper.toDTO(metaFinanceiraService.atualizar(id,meta));
+        MetaFinanceira atualizado = metaFinanceiraService.atualizar(id,meta);
+        MetaFinanceiraResponseDTO responseDTO = MetaFinanceiraMapper.toDTO(atualizado);
+
+        return ResponseEntity.ok(responseDTO);
     }
 
     @DeleteMapping("/{id}")
-    public String deletar(@PathVariable Long id){
-        return metaFinanceiraService.deletar(id);
+    public ResponseEntity deletar(@PathVariable Long id){
+        metaFinanceiraService.deletar(id);
+
+        return ResponseEntity.noContent().build();
     }
 }

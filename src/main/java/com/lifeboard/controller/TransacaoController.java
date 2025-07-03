@@ -13,6 +13,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.web.PageableDefault;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.util.UriComponentsBuilder;
 
 import java.util.List;
 import java.util.stream.Collectors;
@@ -36,31 +37,38 @@ public class TransacaoController {
     }
 
     @GetMapping("/{id}")
-    public TransacaoResponseDTO buscarPorId(@PathVariable Long id) {
-        return TransacaoMapper.toDTO(transacaoService.buscarPorId(id));
+    public ResponseEntity buscarPorId(@PathVariable Long id) {
+        var transacao = TransacaoMapper.toDTO(transacaoService.buscarPorId(id));
+        return ResponseEntity.ok(transacao);
     }
 
     @PostMapping
-    public TransacaoResponseDTO salvar(@RequestBody @Valid TransacaoRequestDTO dto){
+    public ResponseEntity salvar(@RequestBody @Valid TransacaoRequestDTO dto, UriComponentsBuilder uriBuilder){
         Financeiro financeiro = financeiroService.buscarPorId(dto.getIdFinanceiro());
-
         Transacao transacao = TransacaoMapper.toEntity(dto, financeiro);
+        var transacaoSalva = TransacaoMapper.toDTO(transacaoService.salvar(transacao));
 
-        return TransacaoMapper.toDTO(transacaoService.salvar(transacao));
+        var uri = uriBuilder.path("/api/transacoes/{id}").buildAndExpand(transacaoSalva.getId()).toUri();
+
+        return ResponseEntity.created(uri).body(transacaoSalva);
     }
 
     @PutMapping("/{id}")
-    public TransacaoResponseDTO atualizar(@PathVariable Long id, @RequestBody @Valid TransacaoRequestDTO dto){
+    public ResponseEntity atualizar(@PathVariable Long id, @RequestBody @Valid TransacaoRequestDTO dto){
         Financeiro financeiro = financeiroService.buscarPorId(dto.getIdFinanceiro());
-
         Transacao transacao = TransacaoMapper.toEntity(dto, financeiro);
         transacao.setId(id);
 
-        return TransacaoMapper.toDTO(transacaoService.atualizar(id,transacao));
+        Transacao atualizado = transacaoService.atualizar(id,transacao);
+        TransacaoResponseDTO responseDTO = TransacaoMapper.toDTO(atualizado);
+
+        return ResponseEntity.ok(responseDTO);
     }
 
     @DeleteMapping("/{id}")
-    public String deletar(@PathVariable Long id){
-        return transacaoService.deletar(id);
+    public ResponseEntity deletar(@PathVariable Long id){
+        transacaoService.deletar(id);
+
+        return ResponseEntity.noContent().build();
     }
 }
