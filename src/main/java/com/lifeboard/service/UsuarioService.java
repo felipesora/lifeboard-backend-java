@@ -5,6 +5,7 @@ import com.lifeboard.repository.UsuarioRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 
@@ -13,6 +14,9 @@ public class UsuarioService {
 
     @Autowired
     private UsuarioRepository repository;
+
+    @Autowired
+    private PasswordEncoder passwordEncoder;
 
     public Page<Usuario> listarTodos(Pageable pageable) {
         return repository.findAllByOrderByIdAsc(pageable);
@@ -24,6 +28,9 @@ public class UsuarioService {
     }
 
     public Usuario salvar(Usuario entity) {
+        String senhaCriptografada = passwordEncoder.encode(entity.getSenha());
+        entity.setSenha(senhaCriptografada);
+
         return repository.save(entity);
     }
 
