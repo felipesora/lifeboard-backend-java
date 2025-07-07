@@ -63,20 +63,68 @@ public class TransacaoService {
         Transacao transacaoExistente = repository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Transação não encontrada com id: " + id));
 
+        Financeiro financeiro = transacaoExistente.getFinanceiro();
+        BigDecimal saldoAtual = financeiro.getSaldoAtual();
+
+        BigDecimal valorAntigo = transacaoExistente.getValor();
+        TipoTransacao tipoAntigo = transacaoExistente.getTipo();
+
+        BigDecimal valorNovo = novaTransacao.getValor();
+        TipoTransacao tipoNovo = novaTransacao.getTipo();
+
+        // Desfaz o efeito antigo
+        if (tipoAntigo == TipoTransacao.SAIDA) {
+            saldoAtual = saldoAtual.add(valorAntigo);
+        } else if (tipoAntigo == TipoTransacao.ENTRADA) {
+            saldoAtual = saldoAtual.subtract(valorAntigo);
+        }
+
+        // Aplica o efeito novo com validação
+        if (tipoNovo == TipoTransacao.SAIDA) {
+            if (saldoAtual.compareTo(valorNovo) < 0) {
+                throw new RuntimeException("Saldo insuficiente para realizar a atualização de SAIDA!");
+            }
+            saldoAtual = saldoAtual.subtract(valorNovo);
+        } else if (tipoNovo == TipoTransacao.ENTRADA) {
+            saldoAtual = saldoAtual.add(valorNovo);
+        }
+
+        // Atualiza o financeiro e transação
+        financeiro.setSaldoAtual(saldoAtual);
+        financeiroRepository.save(financeiro);
+
         transacaoExistente.setDescricao(novaTransacao.getDescricao());
-        transacaoExistente.setValor(novaTransacao.getValor());
-        transacaoExistente.setTipo(novaTransacao.getTipo());
+        transacaoExistente.setValor(valorNovo);
+        transacaoExistente.setTipo(tipoNovo);
         transacaoExistente.setCategoria(novaTransacao.getCategoria());
-        transacaoExistente.setFinanceiro(novaTransacao.getFinanceiro());
 
         return repository.save(transacaoExistente);
     }
 
     public String deletar(Long id) {
-        if (repository.existsById(id)) {
-            repository.deleteById(id);
-            return "Transação deletada com sucesso!";
+        Transacao transacao = repository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Transação não encontrada com id: " + id));
+
+        Financeiro financeiro = transacao.getFinanceiro();
+        BigDecimal saldoAtual = financeiro.getSaldoAtual();
+        BigDecimal valor = transacao.getValor();
+
+        if (transacao.getTipo() == TipoTransacao.SAIDA) {
+            // Desfazer SAIDA → soma de volta
+            saldoAtual = saldoAtual.add(valor);
+        } else if (transacao.getTipo() == TipoTransacao.ENTRADA) {
+            // Desfazer ENTRADA → subtrai
+            if (saldoAtual.compareTo(valor) < 0) {
+                throw new RuntimeException("Saldo insuficiente para remover esta ENTRADA. Isso deixaria o saldo negativo!");
+            }
+            saldoAtual = saldoAtual.subtract(valor);
         }
-        throw new RuntimeException("Erro ao deletar! Transação com " + id + " não encontrada.");
+
+        financeiro.setSaldoAtual(saldoAtual);
+        financeiroRepository.save(financeiro);
+
+        repository.deleteById(id);
+
+        return "Transação deletada com sucesso!";
     }
 }

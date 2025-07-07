@@ -9,7 +9,7 @@ import java.math.BigDecimal;
 public class FinanceiroRequestDTO {
 
     @NotNull(message = "Saldo Atual é obrigatório.")
-    @DecimalMin(value = "0.0", inclusive = false, message = "O saldo deve ser maior que zero.")
+    @DecimalMin(value = "0.0", inclusive = true, message = "O saldo deve ser igual ou maior que zero.")
     @JsonProperty("saldo_atual")
     private BigDecimal saldoAtual;
 
