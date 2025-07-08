@@ -2,7 +2,8 @@ package com.lifeboard.dto;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
-import com.lifeboard.model.Financeiro;
+import java.util.List;
+
 
 @JsonPropertyOrder({ "id_usuario", "nome", "email", "senha", "financeiro"})
 public class UsuarioResponseDTO {
@@ -13,16 +14,18 @@ public class UsuarioResponseDTO {
     private String email;
     private String senha;
     private FinanceiroResponseDTO financeiro;
+    private List<TarefaResponseDTO> tarefas;
 
     public UsuarioResponseDTO() {
     }
 
-    public UsuarioResponseDTO(Long id, String nome, String email, String senha, FinanceiroResponseDTO financeiro) {
+    public UsuarioResponseDTO(Long id, String nome, String email, String senha, FinanceiroResponseDTO financeiro, List<TarefaResponseDTO> tarefas) {
         this.id = id;
         this.nome = nome;
         this.email = email;
         this.senha = senha;
         this.financeiro = financeiro;
+        this.tarefas = tarefas;
     }
 
     public Long getId() {
@@ -63,5 +66,13 @@ public class UsuarioResponseDTO {
 
     public void setFinanceiro(FinanceiroResponseDTO financeiro) {
         this.financeiro = financeiro;
+    }
+
+    public List<TarefaResponseDTO> getTarefas() {
+        return tarefas;
+    }
+
+    public void setTarefas(List<TarefaResponseDTO> tarefas) {
+        this.tarefas = tarefas;
     }
 }

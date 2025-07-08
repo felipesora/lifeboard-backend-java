@@ -32,15 +32,19 @@ public class Usuario implements UserDetails {
     @OneToOne(mappedBy = "usuario", cascade = CascadeType.ALL)
     private Financeiro financeiro;
 
+    @OneToMany(mappedBy = "usuario", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<Tarefa> tarefas;
+
     public Usuario() {
     }
 
-    public Usuario(Long id, String nome, String email, String senha, Financeiro financeiro) {
+    public Usuario(Long id, String nome, String email, String senha, Financeiro financeiro, List<Tarefa> tarefas) {
         this.id = id;
         this.nome = nome;
         this.email = email;
         this.senha = senha;
         this.financeiro = financeiro;
+        this.tarefas = tarefas;
     }
 
     public Long getId() {
@@ -81,6 +85,14 @@ public class Usuario implements UserDetails {
 
     public void setFinanceiro(Financeiro financeiro) {
         this.financeiro = financeiro;
+    }
+
+    public List<Tarefa> getTarefas() {
+        return tarefas;
+    }
+
+    public void setTarefas(List<Tarefa> tarefas) {
+        this.tarefas = tarefas;
     }
 
     @Override
