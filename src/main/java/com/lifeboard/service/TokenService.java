@@ -23,6 +23,7 @@ public class TokenService {
             return JWT.create()
                     .withIssuer("API LifeBoard")
                     .withSubject(usuario.getEmail())
+                    .withClaim("id", usuario.getId())
                     .withExpiresAt(dataExpiracao())
                     .sign(algoritmo);
         } catch (JWTCreationException exception){
