@@ -32,6 +32,7 @@ public class MetaFinanceiraService {
 
         metaExistente.setNome(novaMeta.getNome());
         metaExistente.setValorMeta(novaMeta.getValorMeta());
+        metaExistente.setValorAtual(novaMeta.getValorAtual());
         metaExistente.setDataLimite(novaMeta.getDataLimite());
         metaExistente.setStatus(novaMeta.getStatus());
         metaExistente.setFinanceiro(novaMeta.getFinanceiro());

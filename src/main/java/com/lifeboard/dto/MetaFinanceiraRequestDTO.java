@@ -17,6 +17,10 @@ public class MetaFinanceiraRequestDTO {
     @JsonProperty("valor_meta")
     private BigDecimal valorMeta;
 
+    @NotNull(message = "O valor atual é obrigatório.")
+    @JsonProperty("valor_atual")
+    private BigDecimal valorAtual;
+
     @NotNull(message = "A data limite da meta é obrigatório.")
     @JsonProperty("data_limite")
     private LocalDate dataLimite;
@@ -31,9 +35,10 @@ public class MetaFinanceiraRequestDTO {
     public MetaFinanceiraRequestDTO() {
     }
 
-    public MetaFinanceiraRequestDTO(String nome, BigDecimal valorMeta, LocalDate dataLimite, StatusMeta status, Long idFinanceiro) {
+    public MetaFinanceiraRequestDTO(String nome, BigDecimal valorMeta, BigDecimal valorAtual, LocalDate dataLimite, StatusMeta status, Long idFinanceiro) {
         this.nome = nome;
         this.valorMeta = valorMeta;
+        this.valorAtual = valorAtual;
         this.dataLimite = dataLimite;
         this.status = status;
         this.idFinanceiro = idFinanceiro;
@@ -53,6 +58,14 @@ public class MetaFinanceiraRequestDTO {
 
     public void setValorMeta(BigDecimal valorMeta) {
         this.valorMeta = valorMeta;
+    }
+
+    public BigDecimal getValorAtual() {
+        return valorAtual;
+    }
+
+    public void setValorAtual(BigDecimal valorAtual) {
+        this.valorAtual = valorAtual;
     }
 
     public LocalDate getDataLimite() {

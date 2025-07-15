@@ -18,10 +18,13 @@ public class MetaFinanceira {
     @Column(nullable = false, length = 100)
     private String nome;
 
-    @Column(nullable = false)
+    @Column(name = "valor_meta",nullable = false)
     private BigDecimal valorMeta;
 
-    @Column(nullable = false)
+    @Column(name = "valor_atual", nullable = false)
+    private BigDecimal valorAtual;
+
+    @Column(name = "data_limite",nullable = false)
     private LocalDate dataLimite;
 
     @Enumerated(EnumType.STRING)
@@ -35,10 +38,11 @@ public class MetaFinanceira {
     public MetaFinanceira() {
     }
 
-    public MetaFinanceira(Long id, String nome, BigDecimal valorMeta, LocalDate dataLimite, StatusMeta status, Financeiro financeiro) {
+    public MetaFinanceira(Long id, String nome, BigDecimal valorMeta, BigDecimal valorAtual, LocalDate dataLimite, StatusMeta status, Financeiro financeiro) {
         this.id = id;
         this.nome = nome;
         this.valorMeta = valorMeta;
+        this.valorAtual = valorAtual;
         this.dataLimite = dataLimite;
         this.status = status;
         this.financeiro = financeiro;
@@ -66,6 +70,14 @@ public class MetaFinanceira {
 
     public void setValorMeta(BigDecimal valorMeta) {
         this.valorMeta = valorMeta;
+    }
+
+    public BigDecimal getValorAtual() {
+        return valorAtual;
+    }
+
+    public void setValorAtual(BigDecimal valorAtual) {
+        this.valorAtual = valorAtual;
     }
 
     public LocalDate getDataLimite() {
