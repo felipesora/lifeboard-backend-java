@@ -25,7 +25,6 @@ public class MetaFinanceiraMapper {
         meta.setValorMeta(dto.getValorMeta());
         meta.setValorAtual(dto.getValorAtual());
         meta.setDataLimite(dto.getDataLimite());
-        meta.setStatus(dto.getStatus());
         meta.setFinanceiro(financeiro);
         return meta;
     }
