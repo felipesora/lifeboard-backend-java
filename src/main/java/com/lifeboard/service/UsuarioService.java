@@ -58,8 +58,17 @@ public class UsuarioService {
 
         usuarioExistente.setNome(novoUsuario.getNome());
         usuarioExistente.setEmail(novoUsuario.getEmail());
-        usuarioExistente.setSenha(novoUsuario.getSenha());
-        usuarioExistente.setFinanceiro(novoUsuario.getFinanceiro());
+
+        // Se a senha veio preenchida, criptografa antes de atualizar
+        if (novoUsuario.getSenha() != null && !novoUsuario.getSenha().isBlank()) {
+            String senhaCriptografada = passwordEncoder.encode(novoUsuario.getSenha());
+            usuarioExistente.setSenha(senhaCriptografada);
+        }
+
+        // Evita sobrescrever o financeiro se vier nulo
+        if (novoUsuario.getFinanceiro() != null) {
+            usuarioExistente.setFinanceiro(novoUsuario.getFinanceiro());
+        }
 
         return usuarioRepository.save(usuarioExistente);
     }
