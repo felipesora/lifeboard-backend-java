@@ -16,13 +16,14 @@ public class TarefaRequestDTO {
     @NotBlank(message = "Descrição é obrigatória.")
     private String descricao;
 
-    @NotBlank(message = "Prioridade é obrigatória.")
+    @NotNull(message = "Prioridade é obrigatória.")
     private Prioridade prioridade;
 
-    @NotBlank(message = "Status é obrigatório.")
+    @NotNull(message = "Status é obrigatório.")
     private StatusTarefa status;
 
-    @NotBlank(message = "Data Limite é obrigatória.")
+    @NotNull(message = "Data Limite é obrigatória.")
+    @JsonProperty("data_limite")
     private LocalDate dataLimite;
 
     @NotNull(message = "O ID do Usuário é obrigatório.")
