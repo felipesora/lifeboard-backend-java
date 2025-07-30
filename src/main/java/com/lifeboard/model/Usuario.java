@@ -29,6 +29,10 @@ public class Usuario implements UserDetails {
     @Column(nullable = false, length = 100)
     private String senha;
 
+    @Lob
+    @Column(name = "foto_perfil")
+    private byte[] fotoPerfil;
+
     @OneToOne(mappedBy = "usuario", cascade = CascadeType.ALL)
     private Financeiro financeiro;
 
@@ -38,11 +42,12 @@ public class Usuario implements UserDetails {
     public Usuario() {
     }
 
-    public Usuario(Long id, String nome, String email, String senha, Financeiro financeiro, List<Tarefa> tarefas) {
+    public Usuario(Long id, String nome, String email, String senha, byte[] fotoPerfil, Financeiro financeiro, List<Tarefa> tarefas) {
         this.id = id;
         this.nome = nome;
         this.email = email;
         this.senha = senha;
+        this.fotoPerfil = fotoPerfil;
         this.financeiro = financeiro;
         this.tarefas = tarefas;
     }
@@ -77,6 +82,14 @@ public class Usuario implements UserDetails {
 
     public void setSenha(String senha) {
         this.senha = senha;
+    }
+
+    public byte[] getFotoPerfil() {
+        return fotoPerfil;
+    }
+
+    public void setFotoPerfil(byte[] fotoPerfil) {
+        this.fotoPerfil = fotoPerfil;
     }
 
     public Financeiro getFinanceiro() {

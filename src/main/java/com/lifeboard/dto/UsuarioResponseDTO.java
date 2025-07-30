@@ -5,15 +5,20 @@ import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import java.util.List;
 
 
-@JsonPropertyOrder({ "id_usuario", "nome", "email", "senha", "financeiro"})
+@JsonPropertyOrder({ "id_usuario", "nome", "email", "senha", "financeiro", "tarefas"})
 public class UsuarioResponseDTO {
 
     @JsonProperty("id_usuario")
     private Long id;
+
     private String nome;
+
     private String email;
+
     private String senha;
+
     private FinanceiroResponseDTO financeiro;
+
     private List<TarefaResponseDTO> tarefas;
 
     public UsuarioResponseDTO() {

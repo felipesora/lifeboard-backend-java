@@ -9,7 +9,9 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.web.multipart.MultipartFile;
 
+import java.io.IOException;
 import java.math.BigDecimal;
 
 
@@ -79,5 +81,28 @@ public class UsuarioService {
             return "Usuário deletado com sucesso!";
         }
         throw new RuntimeException("Usuário com id " + id + " não encontrado.");
+    }
+
+    public void atualizarFotoPerfil(Long id, MultipartFile file) throws IOException {
+        Usuario usuario = usuarioRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Usuário não encontrado com id: " + id));
+
+        usuario.setFotoPerfil(file.getBytes());
+        usuarioRepository.save(usuario);
+    }
+
+    public byte[] buscarFotoPerfil(Long id) {
+        Usuario usuario = usuarioRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Usuário não encontrado com id: " + id));
+
+        return usuario.getFotoPerfil();
+    }
+
+    public void removerFotoPerfil(Long id) {
+        Usuario usuario = usuarioRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Usuário não encontrado com id: " + id));
+
+        usuario.setFotoPerfil(null);
+        usuarioRepository.save(usuario);
     }
 }

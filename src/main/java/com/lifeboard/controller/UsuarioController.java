@@ -10,9 +10,13 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.web.PageableDefault;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.util.UriComponentsBuilder;
+
+import java.io.IOException;
 
 @RestController
 @RequestMapping("api/usuarios")
@@ -60,5 +64,23 @@ public class UsuarioController {
         service.deletar(id);
 
         return ResponseEntity.noContent().build();
+    }
+
+    @PutMapping("/{id}/foto")
+    public ResponseEntity<Void> atualizarFoto(@PathVariable Long id, @RequestParam("file") MultipartFile file) throws IOException {
+        service.atualizarFotoPerfil(id, file);
+        return ResponseEntity.ok().build();
+    }
+
+    @GetMapping(value = "/{id}/foto", produces = MediaType.IMAGE_PNG_VALUE)
+    public ResponseEntity<byte[]> buscarFoto(@PathVariable Long id) {
+        byte[] imagem = service.buscarFotoPerfil(id);
+        return ResponseEntity.ok(imagem);
+    }
+
+    @DeleteMapping("/{id}/foto")
+    public ResponseEntity<Void> removerFoto(@PathVariable Long id) {
+        service.removerFotoPerfil(id);
+        return ResponseEntity.ok().build();
     }
 }
