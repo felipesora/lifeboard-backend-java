@@ -1,9 +1,11 @@
 package com.lifeboard.service;
 
 import com.lifeboard.model.Financeiro;
+import com.lifeboard.model.MetaFinanceira;
 import com.lifeboard.model.Transacao;
 import com.lifeboard.model.enums.TipoTransacao;
 import com.lifeboard.repository.FinanceiroRepository;
+import com.lifeboard.repository.MetaFinanceiraRepository;
 import com.lifeboard.repository.TransacaoRepository;
 import jakarta.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -21,6 +23,9 @@ public class TransacaoService {
 
     @Autowired
     private FinanceiroRepository financeiroRepository;
+
+    @Autowired
+    private MetaFinanceiraRepository metaFinanceiraRepository;
 
     public Page<Transacao> listarTodos(Pageable pageable) {
         return repository.findAllByOrderByIdAsc(pageable);
@@ -109,15 +114,45 @@ public class TransacaoService {
         BigDecimal saldoAtual = financeiro.getSaldoAtual();
         BigDecimal valor = transacao.getValor();
 
-        if (transacao.getTipo() == TipoTransacao.SAIDA) {
-            // Desfazer SAIDA → soma de volta
-            saldoAtual = saldoAtual.add(valor);
-        } else if (transacao.getTipo() == TipoTransacao.ENTRADA) {
-            // Desfazer ENTRADA → subtrai
-            if (saldoAtual.compareTo(valor) < 0) {
-                throw new RuntimeException("Saldo insuficiente para remover esta ENTRADA. Isso deixaria o saldo negativo!");
+        switch (transacao.getTipo()) {
+            case SAIDA -> saldoAtual = saldoAtual.add(valor); // desfaz saída
+
+            case ENTRADA -> {
+                if (saldoAtual.compareTo(valor) < 0) {
+                    throw new RuntimeException("Saldo insuficiente para remover esta ENTRADA. Isso deixaria o saldo negativo!");
+                }
+                saldoAtual = saldoAtual.subtract(valor); // desfaz entrada
             }
-            saldoAtual = saldoAtual.subtract(valor);
+
+            case APLICACAO -> {
+                // devolve valor ao financeiro e remove da meta
+                saldoAtual = saldoAtual.add(valor);
+
+                MetaFinanceira meta = metaFinanceiraRepository.findByFinanceiroAndNome(financeiro, transacao.getDescricao().replace("Aplicação na meta: ", ""))
+                        .orElseThrow(() -> new RuntimeException("Meta relacionada ao investimento não encontrada."));
+
+                BigDecimal saldoMeta = meta.getValorAtual();
+                if (saldoMeta.compareTo(valor) < 0) {
+                    throw new RuntimeException("A meta não possui saldo suficiente para desfazer o investimento.");
+                }
+
+                meta.setValorAtual(saldoMeta.subtract(valor));
+                metaFinanceiraRepository.save(meta);
+            }
+
+            case RESGATE -> {
+                // retira valor do financeiro e adiciona à meta
+                if (saldoAtual.compareTo(valor) < 0) {
+                    throw new RuntimeException("Saldo insuficiente para remover este RESGATE.");
+                }
+                saldoAtual = saldoAtual.subtract(valor);
+
+                MetaFinanceira meta = metaFinanceiraRepository.findByFinanceiroAndNome(financeiro, transacao.getDescricao().replace("Retirada da meta: ", ""))
+                        .orElseThrow(() -> new RuntimeException("Meta relacionada ao resgate não encontrada."));
+
+                meta.setValorAtual(meta.getValorAtual().add(valor));
+                metaFinanceiraRepository.save(meta);
+            }
         }
 
         financeiro.setSaldoAtual(saldoAtual);

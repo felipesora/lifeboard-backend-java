@@ -6,5 +6,7 @@ public enum CategoriaTransacao {
     LAZER,
     SAUDE,
     MORADIA,
+    SALARIO,
+    INVESTIMENTO,
     OUTROS
 }

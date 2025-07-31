@@ -25,7 +25,7 @@ public class Transacao {
     private BigDecimal valor;
 
     @Enumerated(EnumType.STRING)
-    @Column(nullable = false, length = 10)
+    @Column(nullable = false, length = 15)
     private TipoTransacao tipo; // ENTRADA ou SAIDA
 
     @Column(nullable = false)
