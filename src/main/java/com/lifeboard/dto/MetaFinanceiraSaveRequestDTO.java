@@ -1,13 +1,12 @@
 package com.lifeboard.dto;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.lifeboard.model.enums.StatusMeta;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 
-public class MetaFinanceiraRequestDTO {
+public class MetaFinanceiraSaveRequestDTO {
 
     @NotNull(message = "Nome da Meta é obrigatório.")
     @Size(min = 3, max = 150, message = "O nome da meta deve ter entre 3 e 100 caracteres")
@@ -29,10 +28,10 @@ public class MetaFinanceiraRequestDTO {
     @JsonProperty("id_financeiro")
     private Long idFinanceiro;
 
-    public MetaFinanceiraRequestDTO() {
+    public MetaFinanceiraSaveRequestDTO() {
     }
 
-    public MetaFinanceiraRequestDTO(String nome, BigDecimal valorMeta, BigDecimal valorAtual, LocalDate dataLimite, Long idFinanceiro) {
+    public MetaFinanceiraSaveRequestDTO(String nome, BigDecimal valorMeta, BigDecimal valorAtual, LocalDate dataLimite, Long idFinanceiro) {
         this.nome = nome;
         this.valorMeta = valorMeta;
         this.valorAtual = valorAtual;

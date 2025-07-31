@@ -1,6 +1,8 @@
 package com.lifeboard.controller;
 
-import com.lifeboard.dto.MetaFinanceiraRequestDTO;
+import com.lifeboard.dto.MetaFinanceiraUpdateRequestDTO;
+import com.lifeboard.dto.SaldoRequest;
+import com.lifeboard.dto.MetaFinanceiraSaveRequestDTO;
 import com.lifeboard.dto.MetaFinanceiraResponseDTO;
 import com.lifeboard.mapper.MetaFinanceiraMapper;
 import com.lifeboard.model.Financeiro;
@@ -41,9 +43,9 @@ public class MetaFinanceiraController {
     }
 
     @PostMapping
-    public ResponseEntity salvar(@RequestBody @Valid MetaFinanceiraRequestDTO dto, UriComponentsBuilder uriBuilder){
+    public ResponseEntity salvar(@RequestBody @Valid MetaFinanceiraSaveRequestDTO dto, UriComponentsBuilder uriBuilder){
         Financeiro financeiro = financeiroService.buscarPorId(dto.getIdFinanceiro());
-        MetaFinanceira meta = MetaFinanceiraMapper.toEntity(dto, financeiro);
+        MetaFinanceira meta = MetaFinanceiraMapper.toEntitySave(dto, financeiro);
 
         var metaSalva = MetaFinanceiraMapper.toDTO(metaFinanceiraService.salvar(meta));
 
@@ -52,10 +54,22 @@ public class MetaFinanceiraController {
         return ResponseEntity.created(uri).body(metaSalva);
     }
 
+    @PostMapping("/{id}/adicionar-saldo")
+    public ResponseEntity<?> adicionarSaldo(@PathVariable Long id, @RequestBody @Valid SaldoRequest saldoRequest) {
+        metaFinanceiraService.adicionarSaldo(id, saldoRequest.valor());
+        return ResponseEntity.ok().build();
+    }
+
+    @PostMapping("/{id}/retirar-saldo")
+    public ResponseEntity<?> retirarSaldo(@PathVariable Long id, @RequestBody @Valid SaldoRequest saldoRequest) {
+        metaFinanceiraService.retirarSaldo(id, saldoRequest.valor());
+        return ResponseEntity.ok().build();
+    }
+
     @PutMapping("/{id}")
-    public ResponseEntity atualizar(@PathVariable Long id, @RequestBody @Valid MetaFinanceiraRequestDTO dto){
+    public ResponseEntity atualizar(@PathVariable Long id, @RequestBody @Valid MetaFinanceiraUpdateRequestDTO dto){
         Financeiro financeiro = financeiroService.buscarPorId(dto.getIdFinanceiro());
-        MetaFinanceira meta = MetaFinanceiraMapper.toEntity(dto, financeiro);
+        MetaFinanceira meta = MetaFinanceiraMapper.toEntityUpdate(dto, financeiro);
         meta.setId(id);
 
         MetaFinanceira atualizado = metaFinanceiraService.atualizar(id,meta);

@@ -1,7 +1,8 @@
 package com.lifeboard.mapper;
 
-import com.lifeboard.dto.MetaFinanceiraRequestDTO;
+import com.lifeboard.dto.MetaFinanceiraSaveRequestDTO;
 import com.lifeboard.dto.MetaFinanceiraResponseDTO;
+import com.lifeboard.dto.MetaFinanceiraUpdateRequestDTO;
 import com.lifeboard.model.Financeiro;
 import com.lifeboard.model.MetaFinanceira;
 
@@ -19,11 +20,20 @@ public class MetaFinanceiraMapper {
         );
     }
 
-    public static MetaFinanceira toEntity(MetaFinanceiraRequestDTO dto, Financeiro financeiro) {
+    public static MetaFinanceira toEntitySave(MetaFinanceiraSaveRequestDTO dto, Financeiro financeiro) {
         MetaFinanceira meta = new MetaFinanceira();
         meta.setNome(dto.getNome());
         meta.setValorMeta(dto.getValorMeta());
         meta.setValorAtual(dto.getValorAtual());
+        meta.setDataLimite(dto.getDataLimite());
+        meta.setFinanceiro(financeiro);
+        return meta;
+    }
+
+    public static MetaFinanceira toEntityUpdate(MetaFinanceiraUpdateRequestDTO dto, Financeiro financeiro) {
+        MetaFinanceira meta = new MetaFinanceira();
+        meta.setNome(dto.getNome());
+        meta.setValorMeta(dto.getValorMeta());
         meta.setDataLimite(dto.getDataLimite());
         meta.setFinanceiro(financeiro);
         return meta;
