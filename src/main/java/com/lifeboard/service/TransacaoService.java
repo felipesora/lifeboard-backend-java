@@ -7,6 +7,7 @@ import com.lifeboard.model.enums.TipoTransacao;
 import com.lifeboard.repository.FinanceiroRepository;
 import com.lifeboard.repository.MetaFinanceiraRepository;
 import com.lifeboard.repository.TransacaoRepository;
+import jakarta.persistence.EntityNotFoundException;
 import jakarta.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
@@ -33,13 +34,13 @@ public class TransacaoService {
 
     public Transacao buscarPorId(Long id) {
         return repository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Transação não encontrada com id: " + id));
+                .orElseThrow(() -> new EntityNotFoundException("Transação não encontrada com id: " + id));
     }
 
     @Transactional
     public Transacao salvar(Transacao entity) {
         Financeiro financeiro = financeiroRepository.findById(entity.getFinanceiro().getId())
-                .orElseThrow(() -> new RuntimeException("Financeiro não encontrado com id: " + entity.getFinanceiro().getId()));
+                .orElseThrow(() -> new EntityNotFoundException("Financeiro não encontrado com id: " + entity.getFinanceiro().getId()));
 
         BigDecimal saldoAtual = financeiro.getSaldoAtual();
         BigDecimal valorTransacao = entity.getValor();
@@ -47,7 +48,7 @@ public class TransacaoService {
         if (entity.getTipo() == TipoTransacao.SAIDA) {
             // Validar o saldo suficiente
             if (saldoAtual.compareTo(valorTransacao) < 0) {
-                throw new RuntimeException("Saldo insuficiente para realizar a transação de SAIDA!");
+                throw new EntityNotFoundException("Saldo insuficiente para realizar a transação de SAIDA!");
             }
 
             // Subtrai do saldo
@@ -66,7 +67,7 @@ public class TransacaoService {
 
     public Transacao atualizar(Long id, Transacao novaTransacao) {
         Transacao transacaoExistente = repository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Transação não encontrada com id: " + id));
+                .orElseThrow(() -> new EntityNotFoundException("Transação não encontrada com id: " + id));
 
         Financeiro financeiro = transacaoExistente.getFinanceiro();
         BigDecimal saldoAtual = financeiro.getSaldoAtual();
@@ -87,7 +88,7 @@ public class TransacaoService {
         // Aplica o efeito novo com validação
         if (tipoNovo == TipoTransacao.SAIDA) {
             if (saldoAtual.compareTo(valorNovo) < 0) {
-                throw new RuntimeException("Saldo insuficiente para realizar a atualização de SAIDA!");
+                throw new EntityNotFoundException("Saldo insuficiente para realizar a atualização de SAIDA!");
             }
             saldoAtual = saldoAtual.subtract(valorNovo);
         } else if (tipoNovo == TipoTransacao.ENTRADA) {
@@ -108,7 +109,7 @@ public class TransacaoService {
 
     public String deletar(Long id) {
         Transacao transacao = repository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Transação não encontrada com id: " + id));
+                .orElseThrow(() -> new EntityNotFoundException("Transação não encontrada com id: " + id));
 
         Financeiro financeiro = transacao.getFinanceiro();
         BigDecimal saldoAtual = financeiro.getSaldoAtual();
@@ -119,7 +120,7 @@ public class TransacaoService {
 
             case ENTRADA -> {
                 if (saldoAtual.compareTo(valor) < 0) {
-                    throw new RuntimeException("Saldo insuficiente para remover esta ENTRADA. Isso deixaria o saldo negativo!");
+                    throw new EntityNotFoundException("Saldo insuficiente para remover esta ENTRADA. Isso deixaria o saldo negativo!");
                 }
                 saldoAtual = saldoAtual.subtract(valor); // desfaz entrada
             }
@@ -129,11 +130,11 @@ public class TransacaoService {
                 saldoAtual = saldoAtual.add(valor);
 
                 MetaFinanceira meta = metaFinanceiraRepository.findByFinanceiroAndNome(financeiro, transacao.getDescricao().replace("Aplicação na meta: ", ""))
-                        .orElseThrow(() -> new RuntimeException("Meta relacionada ao investimento não encontrada."));
+                        .orElseThrow(() -> new EntityNotFoundException("Meta relacionada ao investimento não encontrada."));
 
                 BigDecimal saldoMeta = meta.getValorAtual();
                 if (saldoMeta.compareTo(valor) < 0) {
-                    throw new RuntimeException("A meta não possui saldo suficiente para desfazer o investimento.");
+                    throw new EntityNotFoundException("A meta não possui saldo suficiente para desfazer o investimento.");
                 }
 
                 meta.setValorAtual(saldoMeta.subtract(valor));
@@ -143,12 +144,12 @@ public class TransacaoService {
             case RESGATE -> {
                 // retira valor do financeiro e adiciona à meta
                 if (saldoAtual.compareTo(valor) < 0) {
-                    throw new RuntimeException("Saldo insuficiente para remover este RESGATE.");
+                    throw new EntityNotFoundException("Saldo insuficiente para remover este RESGATE.");
                 }
                 saldoAtual = saldoAtual.subtract(valor);
 
                 MetaFinanceira meta = metaFinanceiraRepository.findByFinanceiroAndNome(financeiro, transacao.getDescricao().replace("Retirada da meta: ", ""))
-                        .orElseThrow(() -> new RuntimeException("Meta relacionada ao resgate não encontrada."));
+                        .orElseThrow(() -> new EntityNotFoundException("Meta relacionada ao resgate não encontrada."));
 
                 meta.setValorAtual(meta.getValorAtual().add(valor));
                 metaFinanceiraRepository.save(meta);

@@ -2,6 +2,7 @@ package com.lifeboard.service;
 
 import com.lifeboard.model.Tarefa;
 import com.lifeboard.repository.TarefaRepository;
+import jakarta.persistence.EntityNotFoundException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -19,7 +20,7 @@ public class TarefaService {
 
     public Tarefa buscarPorId(Long id) {
         return repository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Tarefa não encontrada com id: " + id));
+                .orElseThrow(() -> new EntityNotFoundException("Tarefa não encontrada com id: " + id));
     }
 
     public Tarefa salvar(Tarefa entity) {
@@ -28,7 +29,7 @@ public class TarefaService {
 
     public Tarefa atualizar(Long id, Tarefa novaTarefa) {
         Tarefa tarefaExistente = repository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Tarefa não encontrada com id: " + id));
+                .orElseThrow(() -> new EntityNotFoundException("Tarefa não encontrada com id: " + id));
 
         tarefaExistente.setTitulo(novaTarefa.getTitulo());
         tarefaExistente.setDescricao(novaTarefa.getDescricao());
@@ -44,6 +45,6 @@ public class TarefaService {
             repository.deleteById(id);
             return "Tarefa deletada com sucesso!";
         }
-        throw new RuntimeException("Erro ao deletar! Tarefa com " + id + " não encontrada.");
+        throw new EntityNotFoundException("Erro ao deletar! Tarefa com " + id + " não encontrada.");
     }
 }

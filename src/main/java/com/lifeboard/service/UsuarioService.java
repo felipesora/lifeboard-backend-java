@@ -4,6 +4,7 @@ import com.lifeboard.model.Financeiro;
 import com.lifeboard.model.Usuario;
 import com.lifeboard.repository.FinanceiroRepository;
 import com.lifeboard.repository.UsuarioRepository;
+import jakarta.persistence.EntityNotFoundException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -33,7 +34,7 @@ public class UsuarioService {
 
     public Usuario buscarPorId(Long id) {
         return usuarioRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Usuário não encontrado com id: " + id));
+                .orElseThrow(() -> new EntityNotFoundException("Usuário não encontrado com id: " + id));
     }
 
     public Usuario salvar(Usuario entity) {
@@ -56,7 +57,7 @@ public class UsuarioService {
 
     public Usuario atualizar(Long id, Usuario novoUsuario) {
         Usuario usuarioExistente = usuarioRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Usuário não encontrado com id: " + id));
+                .orElseThrow(() -> new EntityNotFoundException("Usuário não encontrado com id: " + id));
 
         usuarioExistente.setNome(novoUsuario.getNome());
         usuarioExistente.setEmail(novoUsuario.getEmail());
@@ -80,12 +81,12 @@ public class UsuarioService {
             usuarioRepository.deleteById(id);
             return "Usuário deletado com sucesso!";
         }
-        throw new RuntimeException("Usuário com id " + id + " não encontrado.");
+        throw new EntityNotFoundException("Usuário com id " + id + " não encontrado.");
     }
 
     public void atualizarFotoPerfil(Long id, MultipartFile file) throws IOException {
         Usuario usuario = usuarioRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Usuário não encontrado com id: " + id));
+                .orElseThrow(() -> new EntityNotFoundException("Usuário não encontrado com id: " + id));
 
         usuario.setFotoPerfil(file.getBytes());
         usuarioRepository.save(usuario);
@@ -93,14 +94,14 @@ public class UsuarioService {
 
     public byte[] buscarFotoPerfil(Long id) {
         Usuario usuario = usuarioRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Usuário não encontrado com id: " + id));
+                .orElseThrow(() -> new EntityNotFoundException("Usuário não encontrado com id: " + id));
 
         return usuario.getFotoPerfil();
     }
 
     public void removerFotoPerfil(Long id) {
         Usuario usuario = usuarioRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Usuário não encontrado com id: " + id));
+                .orElseThrow(() -> new EntityNotFoundException("Usuário não encontrado com id: " + id));
 
         usuario.setFotoPerfil(null);
         usuarioRepository.save(usuario);

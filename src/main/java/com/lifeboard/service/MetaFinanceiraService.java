@@ -1,5 +1,7 @@
 package com.lifeboard.service;
 
+import com.lifeboard.exception.RegraNegocioException;
+import com.lifeboard.exception.SaldoInsuficienteException;
 import com.lifeboard.model.Financeiro;
 import com.lifeboard.model.MetaFinanceira;
 import com.lifeboard.model.Transacao;
@@ -9,6 +11,7 @@ import com.lifeboard.model.enums.TipoTransacao;
 import com.lifeboard.repository.FinanceiroRepository;
 import com.lifeboard.repository.MetaFinanceiraRepository;
 import com.lifeboard.repository.TransacaoRepository;
+import jakarta.persistence.EntityNotFoundException;
 import jakarta.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
@@ -37,19 +40,19 @@ public class MetaFinanceiraService {
 
     public MetaFinanceira buscarPorId(Long id) {
         return metaRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Meta Financeira não encontrada com id: " + id));
+                .orElseThrow(() -> new EntityNotFoundException("Meta Financeira não encontrada com id: " + id));
     }
 
     @Transactional
     public MetaFinanceira salvar(MetaFinanceira entity) {
         Financeiro financeiro = financeiroRepository.findById(entity.getFinanceiro().getId())
-                .orElseThrow(() -> new RuntimeException("Financeiro não encontrado com id: " + entity.getFinanceiro().getId()));
+                .orElseThrow(() -> new EntityNotFoundException("Financeiro não encontrado com id: " + entity.getFinanceiro().getId()));
 
         BigDecimal saldoAtual = financeiro.getSaldoAtual();
         BigDecimal valorAtual = entity.getValorAtual();
 
         if (saldoAtual.compareTo(valorAtual) < 0) {
-            throw new RuntimeException("Saldo insuficiente para criar esta Meta Financeira!");
+            throw new EntityNotFoundException("Saldo insuficiente para criar esta Meta Financeira!");
         }
 
         financeiro.setSaldoAtual(saldoAtual.subtract(valorAtual));
@@ -68,7 +71,7 @@ public class MetaFinanceiraService {
     @Transactional
     public void adicionarSaldo(Long metaId, BigDecimal valor) {
         MetaFinanceira meta = metaRepository.findById(metaId)
-                .orElseThrow(() -> new RuntimeException("Meta Financeira não encontrada"));
+                .orElseThrow(() -> new EntityNotFoundException("Meta Financeira não encontrada"));
 
         meta.setValorAtual(meta.getValorAtual().add(valor));
         metaRepository.save(meta);
@@ -77,7 +80,7 @@ public class MetaFinanceiraService {
         BigDecimal saldoFinanceiro = financeiro.getSaldoAtual();
 
         if (saldoFinanceiro.compareTo(valor) < 0) {
-            throw new RuntimeException("Saldo insuficiente para realizar a adição de saldo à meta financeira!");
+            throw new SaldoInsuficienteException("Saldo insuficiente para realizar a adição de saldo à meta financeira!");
         }
 
         Transacao transacao = new Transacao();
@@ -95,14 +98,14 @@ public class MetaFinanceiraService {
     @Transactional
     public void retirarSaldo(Long metaId, BigDecimal valor) {
         MetaFinanceira meta = metaRepository.findById(metaId)
-                .orElseThrow(() -> new RuntimeException("Meta Financeira não encontrada"));
+                .orElseThrow(() -> new EntityNotFoundException("Meta Financeira não encontrada"));
 
         if (valor.compareTo(BigDecimal.ZERO) <= 0) {
-            throw new IllegalArgumentException("O valor a ser retirado deve ser maior que zero.");
+            throw new RegraNegocioException("O valor a ser retirado deve ser maior que zero.");
         }
 
         if (meta.getValorAtual().compareTo(valor) < 0) {
-            throw new IllegalArgumentException("Saldo insuficiente na meta.");
+            throw new RegraNegocioException("Saldo insuficiente na meta.");
         }
 
         meta.setValorAtual(meta.getValorAtual().subtract(valor));
@@ -126,7 +129,7 @@ public class MetaFinanceiraService {
     @Transactional
     public MetaFinanceira atualizar(Long id, MetaFinanceira novaMeta) {
         MetaFinanceira metaExistente = metaRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Meta Financeira não encontrada com id: " + id));
+                .orElseThrow(() -> new EntityNotFoundException("Meta Financeira não encontrada com id: " + id));
 
         String nomeAntigo = metaExistente.getNome();
         String nomeNovo = novaMeta.getNome();
@@ -157,7 +160,7 @@ public class MetaFinanceiraService {
     @Transactional
     public String deletar(Long id) {
         MetaFinanceira meta = metaRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Meta Financeira não encontrada com id: " + id));
+                .orElseThrow(() -> new EntityNotFoundException("Meta Financeira não encontrada com id: " + id));
 
         Financeiro financeiro = meta.getFinanceiro();
         BigDecimal saldoAtual = financeiro.getSaldoAtual();

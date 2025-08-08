@@ -3,6 +3,7 @@ package com.lifeboard.service;
 import com.lifeboard.model.Financeiro;
 import com.lifeboard.model.Usuario;
 import com.lifeboard.repository.FinanceiroRepository;
+import jakarta.persistence.EntityNotFoundException;
 import jakarta.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
@@ -23,7 +24,7 @@ public class FinanceiroService {
 
     public Financeiro buscarPorId(Long id) {
         return repository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Financeiro não encontrado com id: " + id));
+                .orElseThrow(() -> new EntityNotFoundException("Financeiro não encontrado com id: " + id));
     }
 
     public Financeiro salvar(Financeiro entity) {
@@ -32,7 +33,7 @@ public class FinanceiroService {
 
     public Financeiro atualizar(Long id, Financeiro novoFinanceiro) {
         Financeiro financeiroExistente = repository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Financeiro não encontrado com id: " + id));
+                .orElseThrow(() -> new EntityNotFoundException("Financeiro não encontrado com id: " + id));
 
         financeiroExistente.setSaldoAtual(novoFinanceiro.getSaldoAtual());
         financeiroExistente.setSalarioMensal(novoFinanceiro.getSalarioMensal());
