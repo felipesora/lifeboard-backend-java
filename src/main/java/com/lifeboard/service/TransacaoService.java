@@ -1,165 +1,187 @@
 package com.lifeboard.service;
 
+import com.lifeboard.dto.TransacaoResponseDTO;
+import com.lifeboard.mapper.TransacaoMapper;
 import com.lifeboard.model.Financeiro;
 import com.lifeboard.model.MetaFinanceira;
 import com.lifeboard.model.Transacao;
 import com.lifeboard.model.enums.TipoTransacao;
-import com.lifeboard.repository.FinanceiroRepository;
 import com.lifeboard.repository.MetaFinanceiraRepository;
 import com.lifeboard.repository.TransacaoRepository;
+import jakarta.persistence.EntityNotFoundException;
 import jakarta.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
+import com.lifeboard.exception.BadRequestException;
 
 import java.math.BigDecimal;
+import java.util.List;
 
 @Service
 public class TransacaoService {
 
     @Autowired
-    private TransacaoRepository repository;
+    private TransacaoRepository transacaoRepository;
 
     @Autowired
-    private FinanceiroRepository financeiroRepository;
+    private FinanceiroService financeiroService;
 
     @Autowired
     private MetaFinanceiraRepository metaFinanceiraRepository;
 
-    public Page<Transacao> listarTodos(Pageable pageable) {
-        return repository.findAllByOrderByIdAsc(pageable);
+    public Page<TransacaoResponseDTO> listarTodos(Pageable pageable) {
+        return transacaoRepository.findAllByOrderByIdAsc(pageable)
+                .map(TransacaoMapper::toDTO);
     }
 
-    public Transacao buscarPorId(Long id) {
-        return repository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Transação não encontrada com id: " + id));
+    public TransacaoResponseDTO buscarDTOPorId(Long id) {
+        var transacao = buscarEntidadePorId(id);
+
+        return TransacaoMapper.toDTO(transacao);
     }
 
     @Transactional
-    public Transacao salvar(Transacao entity) {
-        Financeiro financeiro = financeiroRepository.findById(entity.getFinanceiro().getId())
-                .orElseThrow(() -> new RuntimeException("Financeiro não encontrado com id: " + entity.getFinanceiro().getId()));
+    public TransacaoResponseDTO salvar(Transacao transacao) {
+        Financeiro financeiro = financeiroService.buscarEntidadePorId(transacao.getFinanceiro().getId());
 
         BigDecimal saldoAtual = financeiro.getSaldoAtual();
-        BigDecimal valorTransacao = entity.getValor();
+        BigDecimal valorTransacao = transacao.getValor();
 
-        if (entity.getTipo() == TipoTransacao.SAIDA) {
-            // Validar o saldo suficiente
+        if (transacao.getTipo() == TipoTransacao.SAIDA) {
             if (saldoAtual.compareTo(valorTransacao) < 0) {
-                throw new RuntimeException("Saldo insuficiente para realizar a transação de SAIDA!");
+                throw new BadRequestException("Saldo insuficiente para realizar a transação de SAIDA!");
             }
-
-            // Subtrai do saldo
             financeiro.setSaldoAtual(saldoAtual.subtract(valorTransacao));
-        } else if (entity.getTipo() == TipoTransacao.ENTRADA) {
-            // Soma ao saldo
+
+        } else if (transacao.getTipo() == TipoTransacao.ENTRADA) {
             financeiro.setSaldoAtual(saldoAtual.add(valorTransacao));
         }
 
-        // Persiste atualização do saldo no financeiro
-        financeiroRepository.save(financeiro);
+        financeiroService.atualizar(financeiro.getId(), financeiro);
 
-        entity.setFinanceiro(financeiro);
-        return repository.save(entity);
+        transacao.setFinanceiro(financeiro);
+        var transacaoSalva = transacaoRepository.save(transacao);
+
+        return TransacaoMapper.toDTO(transacaoSalva);
     }
 
-    public Transacao atualizar(Long id, Transacao novaTransacao) {
-        Transacao transacaoExistente = repository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Transação não encontrada com id: " + id));
+    @Transactional
+    public TransacaoResponseDTO atualizar(Long id, Transacao novaTransacao) {
+        Transacao transacaoExistente = buscarEntidadePorId(id);
 
         Financeiro financeiro = transacaoExistente.getFinanceiro();
         BigDecimal saldoAtual = financeiro.getSaldoAtual();
 
-        BigDecimal valorAntigo = transacaoExistente.getValor();
-        TipoTransacao tipoAntigo = transacaoExistente.getTipo();
+        BigDecimal valorTransacaoAntigo = transacaoExistente.getValor();
+        TipoTransacao tipoTransacaoAntigo = transacaoExistente.getTipo();
 
-        BigDecimal valorNovo = novaTransacao.getValor();
-        TipoTransacao tipoNovo = novaTransacao.getTipo();
+        BigDecimal valorTransacaoNovo = novaTransacao.getValor();
+        TipoTransacao tipoTransacaoNovo = novaTransacao.getTipo();
 
         // Desfaz o efeito antigo
-        if (tipoAntigo == TipoTransacao.SAIDA) {
-            saldoAtual = saldoAtual.add(valorAntigo);
-        } else if (tipoAntigo == TipoTransacao.ENTRADA) {
-            saldoAtual = saldoAtual.subtract(valorAntigo);
+        if (tipoTransacaoAntigo == TipoTransacao.SAIDA) {
+            saldoAtual = saldoAtual.add(valorTransacaoAntigo);
+
+        } else if (tipoTransacaoAntigo == TipoTransacao.ENTRADA) {
+            saldoAtual = saldoAtual.subtract(valorTransacaoAntigo);
         }
 
-        // Aplica o efeito novo com validação
-        if (tipoNovo == TipoTransacao.SAIDA) {
-            if (saldoAtual.compareTo(valorNovo) < 0) {
-                throw new RuntimeException("Saldo insuficiente para realizar a atualização de SAIDA!");
+        // Aplica o efeito novo
+        if (tipoTransacaoNovo == TipoTransacao.SAIDA) {
+            if (saldoAtual.compareTo(valorTransacaoNovo) < 0) {
+                throw new BadRequestException("Saldo insuficiente para realizar a atualização de SAIDA!");
             }
-            saldoAtual = saldoAtual.subtract(valorNovo);
-        } else if (tipoNovo == TipoTransacao.ENTRADA) {
-            saldoAtual = saldoAtual.add(valorNovo);
+            saldoAtual = saldoAtual.subtract(valorTransacaoNovo);
+
+        } else if (tipoTransacaoNovo == TipoTransacao.ENTRADA) {
+            saldoAtual = saldoAtual.add(valorTransacaoNovo);
         }
 
-        // Atualiza o financeiro e transação
         financeiro.setSaldoAtual(saldoAtual);
-        financeiroRepository.save(financeiro);
+        financeiroService.atualizar(financeiro.getId(), financeiro);
 
         transacaoExistente.setDescricao(novaTransacao.getDescricao());
-        transacaoExistente.setValor(valorNovo);
-        transacaoExistente.setTipo(tipoNovo);
+        transacaoExistente.setValor(valorTransacaoNovo);
+        transacaoExistente.setTipo(tipoTransacaoNovo);
         transacaoExistente.setCategoria(novaTransacao.getCategoria());
 
-        return repository.save(transacaoExistente);
+        var transacaoAtualizada = transacaoRepository.save(transacaoExistente);
+
+        return TransacaoMapper.toDTO(transacaoAtualizada);
     }
 
-    public String deletar(Long id) {
-        Transacao transacao = repository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Transação não encontrada com id: " + id));
+    @Transactional
+    public void deletar(Long id) {
+        Transacao transacao = buscarEntidadePorId(id);
 
         Financeiro financeiro = transacao.getFinanceiro();
         BigDecimal saldoAtual = financeiro.getSaldoAtual();
-        BigDecimal valor = transacao.getValor();
+        BigDecimal valorTransacao = transacao.getValor();
 
         switch (transacao.getTipo()) {
-            case SAIDA -> saldoAtual = saldoAtual.add(valor); // desfaz saída
+            case SAIDA -> saldoAtual = saldoAtual.add(valorTransacao);
 
             case ENTRADA -> {
-                if (saldoAtual.compareTo(valor) < 0) {
-                    throw new RuntimeException("Saldo insuficiente para remover esta ENTRADA. Isso deixaria o saldo negativo!");
+                if (saldoAtual.compareTo(valorTransacao) < 0) {
+                    throw new BadRequestException("Saldo insuficiente para remover esta ENTRADA. Isso deixaria o saldo negativo!");
                 }
-                saldoAtual = saldoAtual.subtract(valor); // desfaz entrada
+                saldoAtual = saldoAtual.subtract(valorTransacao);
             }
 
             case APLICACAO -> {
                 // devolve valor ao financeiro e remove da meta
-                saldoAtual = saldoAtual.add(valor);
+                saldoAtual = saldoAtual.add(valorTransacao);
 
                 MetaFinanceira meta = metaFinanceiraRepository.findByFinanceiroAndNome(financeiro, transacao.getDescricao().replace("Aplicação na meta: ", ""))
-                        .orElseThrow(() -> new RuntimeException("Meta relacionada ao investimento não encontrada."));
+                        .orElseThrow(() -> new EntityNotFoundException("Meta relacionada ao investimento não encontrada."));
 
                 BigDecimal saldoMeta = meta.getValorAtual();
-                if (saldoMeta.compareTo(valor) < 0) {
-                    throw new RuntimeException("A meta não possui saldo suficiente para desfazer o investimento.");
+
+                if (saldoMeta.compareTo(valorTransacao) < 0) {
+                    throw new BadRequestException("A meta não possui saldo suficiente para desfazer o investimento.");
                 }
 
-                meta.setValorAtual(saldoMeta.subtract(valor));
+                meta.setValorAtual(saldoMeta.subtract(valorTransacao));
                 metaFinanceiraRepository.save(meta);
             }
 
             case RESGATE -> {
                 // retira valor do financeiro e adiciona à meta
-                if (saldoAtual.compareTo(valor) < 0) {
-                    throw new RuntimeException("Saldo insuficiente para remover este RESGATE.");
+                if (saldoAtual.compareTo(valorTransacao) < 0) {
+                    throw new BadRequestException("Saldo insuficiente para remover este RESGATE.");
                 }
-                saldoAtual = saldoAtual.subtract(valor);
+                saldoAtual = saldoAtual.subtract(valorTransacao);
 
                 MetaFinanceira meta = metaFinanceiraRepository.findByFinanceiroAndNome(financeiro, transacao.getDescricao().replace("Retirada da meta: ", ""))
-                        .orElseThrow(() -> new RuntimeException("Meta relacionada ao resgate não encontrada."));
+                        .orElseThrow(() -> new EntityNotFoundException("Meta relacionada ao resgate não encontrada."));
 
-                meta.setValorAtual(meta.getValorAtual().add(valor));
+                meta.setValorAtual(meta.getValorAtual().add(valorTransacao));
                 metaFinanceiraRepository.save(meta);
             }
         }
 
         financeiro.setSaldoAtual(saldoAtual);
-        financeiroRepository.save(financeiro);
+        financeiroService.atualizar(financeiro.getId(), financeiro);
 
-        repository.deleteById(id);
+        transacaoRepository.deleteById(id);
+    }
 
-        return "Transação deletada com sucesso!";
+    public Transacao buscarEntidadePorId(Long id) {
+        return transacaoRepository.findById(id)
+                .orElseThrow(() -> new EntityNotFoundException("Transação com id: " + id + " não encontrada"));
+    }
+
+    public List<Transacao> buscarTransacoesPorFinanceiro(Financeiro financeiro) {
+        return transacaoRepository.findByFinanceiro(financeiro);
+    }
+
+    public void atualizarVariasTransacoes(List<Transacao> transacoes) {
+        transacaoRepository.saveAll(transacoes);
+    }
+
+    public void deletarVariasTransacoes(List<Transacao> transacoes) {
+        transacaoRepository.deleteAll(transacoes);
     }
 }

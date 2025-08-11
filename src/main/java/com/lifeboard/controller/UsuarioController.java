@@ -41,9 +41,8 @@ public class UsuarioController {
     @SecurityRequirement(name = "bearer-key")
     @GetMapping
     public ResponseEntity<Page<UsuarioResponseDTO>> listarTodos(@PageableDefault(size = 10, page = 0, sort = {"id"}) Pageable paginacao) {
-        Page<Usuario> usuarios = service.listarTodos(paginacao);
-        Page<UsuarioResponseDTO> dtoPage = usuarios.map(UsuarioMapper::toDTO);
-        return ResponseEntity.ok(dtoPage);
+        var usuarios = service.listarTodos(paginacao);
+        return ResponseEntity.ok(usuarios);
     }
 
     @Operation(summary = "Buscar usuário por ID")
@@ -53,16 +52,16 @@ public class UsuarioController {
     })
     @SecurityRequirement(name = "bearer-key")
     @GetMapping("/{id}")
-    public ResponseEntity buscarPorId(@PathVariable Long id) {
-        var usuario = UsuarioMapper.toDTO(service.buscarPorId(id));
+    public ResponseEntity<UsuarioResponseDTO> buscarPorId(@PathVariable Long id) {
+        var usuario = service.buscarDTOPorId(id);
         return ResponseEntity.ok(usuario);
     }
 
     @Operation(summary = "Cadastrar um novo usuário")
     @ApiResponse(responseCode = "201", description = "Usuário criado com sucesso")
     @PostMapping
-    public ResponseEntity salvar(@RequestBody @Valid UsuarioRequestDTO dto, UriComponentsBuilder uriBuilder) {
-        var usuario = UsuarioMapper.toDTO(service.salvar(UsuarioMapper.toEntity(dto)));
+    public ResponseEntity<UsuarioResponseDTO> salvar(@RequestBody @Valid UsuarioRequestDTO dto, UriComponentsBuilder uriBuilder) {
+        var usuario = service.salvar(UsuarioMapper.toEntity(dto));
 
         var uri = uriBuilder.path("/api/usuarios/{id}").buildAndExpand(usuario.getId()).toUri();
 
@@ -72,23 +71,17 @@ public class UsuarioController {
     @Operation(summary = "Atualizar um usuário existente")
     @SecurityRequirement(name = "bearer-key")
     @PutMapping("/{id}")
-    public ResponseEntity atualizar(@PathVariable Long id, @RequestBody @Valid UsuarioRequestDTO dto){
-        Usuario usuario = UsuarioMapper.toEntity(dto);
-        usuario.setId(id);
+    public ResponseEntity<UsuarioResponseDTO> atualizar(@PathVariable Long id, @RequestBody @Valid UsuarioRequestDTO dto){
+        var usuarioAtualizado = service.atualizar(id, UsuarioMapper.toEntity(dto));
 
-        Usuario atualizado = service.atualizar(id, usuario);
-
-        UsuarioResponseDTO responseDTO = UsuarioMapper.toDTO(atualizado);
-
-        return ResponseEntity.ok(responseDTO);
+        return ResponseEntity.ok(usuarioAtualizado);
     }
 
     @Operation(summary = "Deletar um usuário")
     @SecurityRequirement(name = "bearer-key")
     @DeleteMapping("/{id}")
-    public ResponseEntity deletar(@PathVariable Long id){
+    public ResponseEntity<Void> deletar(@PathVariable Long id){
         service.deletar(id);
-
         return ResponseEntity.noContent().build();
     }
 

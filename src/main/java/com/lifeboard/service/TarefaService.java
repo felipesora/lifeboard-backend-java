@@ -1,7 +1,11 @@
 package com.lifeboard.service;
 
+import com.lifeboard.dto.TarefaResponseDTO;
+import com.lifeboard.mapper.TarefaMapper;
 import com.lifeboard.model.Tarefa;
+import com.lifeboard.model.Transacao;
 import com.lifeboard.repository.TarefaRepository;
+import jakarta.persistence.EntityNotFoundException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -11,24 +15,27 @@ import org.springframework.stereotype.Service;
 public class TarefaService {
 
     @Autowired
-    private TarefaRepository repository;
+    private TarefaRepository tarefaRepository;
 
-    public Page<Tarefa> listarTodos(Pageable pageable) {
-        return repository.findAllByOrderByIdAsc(pageable);
+    public Page<TarefaResponseDTO> listarTodos(Pageable pageable) {
+        return tarefaRepository.findAllByOrderByIdAsc(pageable)
+                .map(TarefaMapper::toDTO);
     }
 
-    public Tarefa buscarPorId(Long id) {
-        return repository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Tarefa não encontrada com id: " + id));
+    public TarefaResponseDTO buscarDTOPorId(Long id) {
+        var tarefa = buscarEntidadePorId(id);
+
+        return TarefaMapper.toDTO(tarefa);
     }
 
-    public Tarefa salvar(Tarefa entity) {
-        return repository.save(entity);
+    public TarefaResponseDTO salvar(Tarefa tarefa) {
+        var tarefaSalva = tarefaRepository.save(tarefa);
+
+        return TarefaMapper.toDTO(tarefaSalva);
     }
 
-    public Tarefa atualizar(Long id, Tarefa novaTarefa) {
-        Tarefa tarefaExistente = repository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Tarefa não encontrada com id: " + id));
+    public TarefaResponseDTO atualizar(Long id, Tarefa novaTarefa) {
+        Tarefa tarefaExistente = buscarEntidadePorId(id);
 
         tarefaExistente.setTitulo(novaTarefa.getTitulo());
         tarefaExistente.setDescricao(novaTarefa.getDescricao());
@@ -36,14 +43,18 @@ public class TarefaService {
         tarefaExistente.setStatus(novaTarefa.getStatus());
         tarefaExistente.setDataLimite(novaTarefa.getDataLimite());
 
-        return repository.save(tarefaExistente);
+        var tarefaAtualizada = tarefaRepository.save(tarefaExistente);
+
+        return TarefaMapper.toDTO(tarefaAtualizada);
     }
 
-    public String deletar(Long id) {
-        if (repository.existsById(id)) {
-            repository.deleteById(id);
-            return "Tarefa deletada com sucesso!";
-        }
-        throw new RuntimeException("Erro ao deletar! Tarefa com " + id + " não encontrada.");
+    public void deletar(Long id) {
+        var tarefa = buscarEntidadePorId(id);
+        tarefaRepository.delete(tarefa);
+    }
+
+    public Tarefa buscarEntidadePorId(Long id) {
+        return tarefaRepository.findById(id)
+                .orElseThrow(() -> new EntityNotFoundException("Tarefa com id: " + id + " não encontrada"));
     }
 }
