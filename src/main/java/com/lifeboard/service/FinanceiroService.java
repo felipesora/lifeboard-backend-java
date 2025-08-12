@@ -32,8 +32,8 @@ public class FinanceiroService {
     }
 
     @Transactional
-    public FinanceiroResponseDTO salvar(Financeiro entity) {
-        var financeiro = repository.save(entity);
+    public FinanceiroResponseDTO salvar(Financeiro novoFinanceiro) {
+        var financeiro = repository.save(novoFinanceiro);
 
         return FinanceiroMapper.toDTO(financeiro);
     }
@@ -61,22 +61,23 @@ public class FinanceiroService {
             usuario.setFinanceiro(null); // remove o vínculo
         }
 
-        // Remove filhos para garantir o orphanRemoval
-        if (financeiro.getTransacoes() != null) {
-            financeiro.getTransacoes().clear();
-        }
+        limparRelacionamentos(financeiro);
 
-        if (financeiro.getMetas() != null) {
-            financeiro.getMetas().clear();
-        }
-
-        repository.save(financeiro); // atualiza estado
-
-        repository.delete(financeiro); // agora pode deletar
+        repository.save(financeiro);
+        repository.delete(financeiro);
     }
 
     public Financeiro buscarEntidadePorId(Long id) {
         return repository.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException("Financeiro com id: " + id + " não encontrado"));
+    }
+
+    private void limparRelacionamentos(Financeiro financeiro) {
+        if (financeiro.getTransacoes() != null) {
+            financeiro.getTransacoes().clear();
+        }
+        if (financeiro.getMetas() != null) {
+            financeiro.getMetas().clear();
+        }
     }
 }

@@ -71,16 +71,15 @@ public class MetaFinanceiraService {
     @Transactional
     public void adicionarSaldo(Long metaId, BigDecimal valor) {
         MetaFinanceira meta = buscarEntidadePorId(metaId);
-
-        meta.setValorAtual(meta.getValorAtual().add(valor));
-        metaRepository.save(meta);
-
         Financeiro financeiro = meta.getFinanceiro();
         BigDecimal saldoFinanceiro = financeiro.getSaldoAtual();
 
         if (saldoFinanceiro.compareTo(valor) < 0) {
             throw new BadRequestException("Saldo insuficiente para realizar a adição de saldo à meta financeira!");
         }
+
+        meta.setValorAtual(meta.getValorAtual().add(valor));
+        metaRepository.save(meta);
 
         Transacao transacao = new Transacao();
         transacao.setDescricao("Aplicação na meta: " + meta.getNome());

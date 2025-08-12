@@ -41,11 +41,10 @@ public class UsuarioService {
     }
 
     @Transactional
-    public UsuarioResponseDTO salvar(Usuario entity) {
-        String senhaCriptografada = passwordEncoder.encode(entity.getSenha());
-        entity.setSenha(senhaCriptografada);
+    public UsuarioResponseDTO salvar(Usuario novoUsuario) {
+        criptografarSenhaSeNecessario(novoUsuario);
 
-        Usuario usuarioSalvo = usuarioRepository.save(entity);
+        Usuario usuarioSalvo = usuarioRepository.save(novoUsuario);
 
         if (usuarioSalvo.getFinanceiro() == null) {
             Financeiro financeiro = new Financeiro();
@@ -66,10 +65,9 @@ public class UsuarioService {
         usuarioExistente.setNome(novoUsuario.getNome());
         usuarioExistente.setEmail(novoUsuario.getEmail());
 
-        // Se a senha veio preenchida, criptografa antes de atualizar
+        criptografarSenhaSeNecessario(novoUsuario);
         if (novoUsuario.getSenha() != null && !novoUsuario.getSenha().isBlank()) {
-            String senhaCriptografada = passwordEncoder.encode(novoUsuario.getSenha());
-            usuarioExistente.setSenha(senhaCriptografada);
+            usuarioExistente.setSenha(novoUsuario.getSenha());
         }
 
         // Evita sobrescrever o financeiro se vier nulo
@@ -111,5 +109,11 @@ public class UsuarioService {
     public Usuario buscarEntidadePorId(Long id) {
         return usuarioRepository.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException("Usuário com id: " + id + " não encontrado"));
+    }
+
+    private void criptografarSenhaSeNecessario(Usuario usuario) {
+        if (usuario.getSenha() != null && !usuario.getSenha().isBlank()) {
+            usuario.setSenha(passwordEncoder.encode(usuario.getSenha()));
+        }
     }
 }
