@@ -1,8 +1,10 @@
 package com.lifeboard.exception;
 
+import com.fasterxml.jackson.databind.exc.InvalidFormatException;
 import jakarta.persistence.EntityNotFoundException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.validation.FieldError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
@@ -52,6 +54,33 @@ public class TratadorDeErros {
                 .toList();
 
         return ResponseEntity.badRequest().body(erros);
+    }
+
+    @ExceptionHandler(RegraNegocioException.class)
+    public ResponseEntity<?> tratarRegraNegocio(RegraNegocioException ex) {
+        var body = Map.of(
+                "error", "Erro de regra de negócio",
+                "message", ex.getMessage()
+        );
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(body);
+    }
+
+    @ExceptionHandler(HttpMessageNotReadableException.class)
+    public ResponseEntity<?> tratarErroDeConversao(HttpMessageNotReadableException ex) {
+        Throwable causa = ex.getCause();
+
+        if (causa instanceof InvalidFormatException ife) {
+            String nomeCampo = ife.getPath().get(0).getFieldName();
+            return ResponseEntity.badRequest().body(Map.of(
+                    "error", "Requisição inválida",
+                    "message", "O valor enviado para '" + nomeCampo + "' é inválido."
+            ));
+        }
+
+        return ResponseEntity.badRequest().body(Map.of(
+                "error", "Requisição inválida",
+                "message", "O corpo da requisição está mal formatado."
+        ));
     }
 
     // 500 - Erro genérico inesperado
