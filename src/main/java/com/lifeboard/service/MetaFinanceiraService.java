@@ -161,7 +161,6 @@ public class MetaFinanceiraService {
         BigDecimal valorMetaAtual = meta.getValorAtual();
 
         financeiro.setSaldoAtual(saldoAtual.add(valorMetaAtual));
-        financeiroService.atualizar(financeiro.getId(), financeiro);
 
         // Buscar transações relacionadas com a meta (pela descrição)
         List<Transacao> transacoesRelacionadas = transacaoService.buscarTransacoesPorFinanceiro(financeiro)

@@ -45,8 +45,6 @@ public class FinanceiroService {
         financeiroExistente.setSaldoAtual(novoFinanceiro.getSaldoAtual());
         financeiroExistente.setSalarioMensal(novoFinanceiro.getSalarioMensal());
         financeiroExistente.setUsuario(novoFinanceiro.getUsuario());
-        financeiroExistente.setTransacoes(novoFinanceiro.getTransacoes());
-        financeiroExistente.setMetas(novoFinanceiro.getMetas());
 
         var financeiroAtualizado = repository.save(financeiroExistente);
 
