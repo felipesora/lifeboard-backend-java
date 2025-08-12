@@ -1,20 +1,21 @@
 package com.lifeboard.service;
 
+import com.lifeboard.dto.UsuarioResponseDTO;
+import com.lifeboard.mapper.UsuarioMapper;
 import com.lifeboard.model.Financeiro;
 import com.lifeboard.model.Usuario;
 import com.lifeboard.repository.FinanceiroRepository;
 import com.lifeboard.repository.UsuarioRepository;
 import jakarta.persistence.EntityNotFoundException;
+import jakarta.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
-
 import java.io.IOException;
 import java.math.BigDecimal;
-
 
 @Service
 public class UsuarioService {
@@ -28,16 +29,19 @@ public class UsuarioService {
     @Autowired
     private PasswordEncoder passwordEncoder;
 
-    public Page<Usuario> listarTodos(Pageable pageable) {
-        return usuarioRepository.findAllByOrderByIdAsc(pageable);
+    public Page<UsuarioResponseDTO> listarTodos(Pageable pageable) {
+        return usuarioRepository.findAllByOrderByIdAsc(pageable)
+                .map(UsuarioMapper::toDTO);
     }
 
-    public Usuario buscarPorId(Long id) {
-        return usuarioRepository.findById(id)
-                .orElseThrow(() -> new EntityNotFoundException("Usuário não encontrado com id: " + id));
+    public UsuarioResponseDTO buscarDTOPorId(Long id) {
+        var usuario = buscarEntidadePorId(id);
+
+        return UsuarioMapper.toDTO(usuario);
     }
 
-    public Usuario salvar(Usuario entity) {
+    @Transactional
+    public UsuarioResponseDTO salvar(Usuario entity) {
         String senhaCriptografada = passwordEncoder.encode(entity.getSenha());
         entity.setSenha(senhaCriptografada);
 
@@ -52,12 +56,12 @@ public class UsuarioService {
             financeiroRepository.save(financeiro);
         }
 
-        return usuarioSalvo;
+        return UsuarioMapper.toDTO(usuarioSalvo);
     }
 
-    public Usuario atualizar(Long id, Usuario novoUsuario) {
-        Usuario usuarioExistente = usuarioRepository.findById(id)
-                .orElseThrow(() -> new EntityNotFoundException("Usuário não encontrado com id: " + id));
+    @Transactional
+    public UsuarioResponseDTO atualizar(Long id, Usuario novoUsuario) {
+        Usuario usuarioExistente = buscarEntidadePorId(id);
 
         usuarioExistente.setNome(novoUsuario.getNome());
         usuarioExistente.setEmail(novoUsuario.getEmail());
@@ -73,37 +77,39 @@ public class UsuarioService {
             usuarioExistente.setFinanceiro(novoUsuario.getFinanceiro());
         }
 
-        return usuarioRepository.save(usuarioExistente);
+        var usuarioAtualizado = usuarioRepository.save(usuarioExistente);
+
+        return UsuarioMapper.toDTO(usuarioAtualizado);
     }
 
-    public String deletar(Long id) {
-        if (usuarioRepository.existsById(id)) {
-            usuarioRepository.deleteById(id);
-            return "Usuário deletado com sucesso!";
-        }
-        throw new EntityNotFoundException("Usuário com id " + id + " não encontrado.");
+    @Transactional
+    public void deletar(Long id) {
+        var usuario = buscarEntidadePorId(id);
+        usuarioRepository.delete(usuario);
     }
 
     public void atualizarFotoPerfil(Long id, MultipartFile file) throws IOException {
-        Usuario usuario = usuarioRepository.findById(id)
-                .orElseThrow(() -> new EntityNotFoundException("Usuário não encontrado com id: " + id));
+        Usuario usuario = buscarEntidadePorId(id);
 
         usuario.setFotoPerfil(file.getBytes());
         usuarioRepository.save(usuario);
     }
 
     public byte[] buscarFotoPerfil(Long id) {
-        Usuario usuario = usuarioRepository.findById(id)
-                .orElseThrow(() -> new EntityNotFoundException("Usuário não encontrado com id: " + id));
+        Usuario usuario = buscarEntidadePorId(id);
 
         return usuario.getFotoPerfil();
     }
 
     public void removerFotoPerfil(Long id) {
-        Usuario usuario = usuarioRepository.findById(id)
-                .orElseThrow(() -> new EntityNotFoundException("Usuário não encontrado com id: " + id));
+        Usuario usuario = buscarEntidadePorId(id);
 
         usuario.setFotoPerfil(null);
         usuarioRepository.save(usuario);
+    }
+
+    public Usuario buscarEntidadePorId(Long id) {
+        return usuarioRepository.findById(id)
+                .orElseThrow(() -> new EntityNotFoundException("Usuário com id: " + id + " não encontrado"));
     }
 }

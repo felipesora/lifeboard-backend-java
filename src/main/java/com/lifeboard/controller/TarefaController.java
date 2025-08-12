@@ -46,9 +46,8 @@ public class TarefaController {
     })
     @GetMapping
     public ResponseEntity<Page<TarefaResponseDTO>> listarTodos(@PageableDefault(size = 10, page = 0, sort = {"id"})Pageable paginacao) {
-        Page<Tarefa> tarefas = tarefaService.listarTodos(paginacao);
-        Page<TarefaResponseDTO> dtoPage = tarefas.map(TarefaMapper::toDTO);
-        return ResponseEntity.ok(dtoPage);
+        var tarefas = tarefaService.listarTodos(paginacao);
+        return ResponseEntity.ok(tarefas);
     }
 
     @Operation(summary = "Buscar tarefa por ID")
@@ -57,19 +56,19 @@ public class TarefaController {
             @ApiResponse(responseCode = "404", description = "Tarefa não encontrada", content = @Content)
     })
     @GetMapping("/{id}")
-    public ResponseEntity buscarPorId(@PathVariable Long id) {
-        var tarefa = TarefaMapper.toDTO(tarefaService.buscarPorId(id));
+    public ResponseEntity<TarefaResponseDTO> buscarPorId(@PathVariable Long id) {
+        var tarefa = tarefaService.buscarDTOPorId(id);
         return ResponseEntity.ok(tarefa);
     }
 
     @Operation(summary = "Cadastrar uma nova tarefa")
     @ApiResponse(responseCode = "201", description = "Tarefa criada com sucesso")
     @PostMapping
-    public ResponseEntity salvar(@RequestBody @Valid TarefaRequestDTO dto, UriComponentsBuilder uriBuilder) {
-        Usuario usuario = usuarioService.buscarPorId(dto.getUsuarioId());
+    public ResponseEntity<TarefaResponseDTO> salvar(@RequestBody @Valid TarefaRequestDTO dto, UriComponentsBuilder uriBuilder) {
+        Usuario usuario = usuarioService.buscarEntidadePorId(dto.getUsuarioId());
         Tarefa tarefa = TarefaMapper.toEntity(dto, usuario);
 
-        var tarefaSalva = TarefaMapper.toDTO(tarefaService.salvar(tarefa));
+        var tarefaSalva = tarefaService.salvar(tarefa);
 
         var uri = uriBuilder.path("/api/tarefas/{id}").buildAndExpand(tarefaSalva.getId()).toUri();
 
@@ -78,10 +77,10 @@ public class TarefaController {
 
     @Operation(summary = "Atualizar uma tarefa existente")
     @PutMapping("/{id}")
-    public ResponseEntity atualizar(@PathVariable Long id, @RequestBody @Valid TarefaRequestDTO dto){
-        Usuario usuario = usuarioService.buscarPorId(dto.getUsuarioId());
+    public ResponseEntity<TarefaResponseDTO> atualizar(@PathVariable Long id, @RequestBody @Valid TarefaRequestDTO dto){
+        Usuario usuario = usuarioService.buscarEntidadePorId(dto.getUsuarioId());
 
-        Tarefa existente = tarefaService.buscarPorId(id);
+        Tarefa existente = tarefaService.buscarEntidadePorId(id);
 
         existente.setTitulo(dto.getTitulo());
         existente.setDescricao(dto.getDescricao());
@@ -90,16 +89,15 @@ public class TarefaController {
         existente.setDataLimite(dto.getDataLimite());
         existente.setUsuario(usuario);
 
-        Tarefa atualizado = tarefaService.atualizar(id, existente);
+        var tarefaAtualizada = tarefaService.atualizar(id, existente);
 
-        return ResponseEntity.ok(TarefaMapper.toDTO(atualizado));
+        return ResponseEntity.ok(tarefaAtualizada);
     }
 
     @Operation(summary = "Deletar uma tarefa")
     @DeleteMapping("/{id}")
-    public ResponseEntity deletar(@PathVariable Long id){
+    public ResponseEntity<Void> deletar(@PathVariable Long id){
         tarefaService.deletar(id);
-
         return ResponseEntity.noContent().build();
     }
 }

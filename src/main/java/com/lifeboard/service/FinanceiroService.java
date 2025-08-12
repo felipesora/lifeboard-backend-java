@@ -1,5 +1,7 @@
 package com.lifeboard.service;
 
+import com.lifeboard.dto.FinanceiroResponseDTO;
+import com.lifeboard.mapper.FinanceiroMapper;
 import com.lifeboard.model.Financeiro;
 import com.lifeboard.model.Usuario;
 import com.lifeboard.repository.FinanceiroRepository;
@@ -18,35 +20,40 @@ public class FinanceiroService {
     @Autowired
     private FinanceiroRepository repository;
 
-    public Page<Financeiro> listarTodos(Pageable pageable) {
-        return repository.findAllByOrderByIdAsc(pageable);
+    public Page<FinanceiroResponseDTO> listarTodos(Pageable pageable) {
+        return repository.findAllByOrderByIdAsc(pageable)
+                .map(FinanceiroMapper::toDTO);
     }
 
-    public Financeiro buscarPorId(Long id) {
-        return repository.findById(id)
-                .orElseThrow(() -> new EntityNotFoundException("Financeiro não encontrado com id: " + id));
+    public FinanceiroResponseDTO buscarDTOPorId(Long id) {
+        var financeiro = buscarEntidadePorId(id);
+
+        return FinanceiroMapper.toDTO(financeiro);
     }
 
-    public Financeiro salvar(Financeiro entity) {
-        return repository.save(entity);
+    @Transactional
+    public FinanceiroResponseDTO salvar(Financeiro entity) {
+        var financeiro = repository.save(entity);
+
+        return FinanceiroMapper.toDTO(financeiro);
     }
 
-    public Financeiro atualizar(Long id, Financeiro novoFinanceiro) {
-        Financeiro financeiroExistente = repository.findById(id)
-                .orElseThrow(() -> new EntityNotFoundException("Financeiro não encontrado com id: " + id));
+    @Transactional
+    public FinanceiroResponseDTO atualizar(Long id, Financeiro novoFinanceiro) {
+        var financeiroExistente = buscarEntidadePorId(id);
 
         financeiroExistente.setSaldoAtual(novoFinanceiro.getSaldoAtual());
         financeiroExistente.setSalarioMensal(novoFinanceiro.getSalarioMensal());
         financeiroExistente.setUsuario(novoFinanceiro.getUsuario());
-        financeiroExistente.setTransacoes(novoFinanceiro.getTransacoes());
-        financeiroExistente.setMetas(novoFinanceiro.getMetas());
 
-        return repository.save(financeiroExistente);
+        var financeiroAtualizado = repository.save(financeiroExistente);
+
+        return FinanceiroMapper.toDTO(financeiroAtualizado);
     }
 
     @Transactional
-    public String deletar(Long id) {
-        Financeiro financeiro = buscarPorId(id);
+    public void deletar(Long id) {
+        var financeiro = buscarEntidadePorId(id);
 
         // Quebra o vínculo com o usuário
         Usuario usuario = financeiro.getUsuario();
@@ -66,7 +73,10 @@ public class FinanceiroService {
         repository.save(financeiro); // atualiza estado
 
         repository.delete(financeiro); // agora pode deletar
+    }
 
-        return "Financeiro deletado com sucesso!";
+    public Financeiro buscarEntidadePorId(Long id) {
+        return repository.findById(id)
+                .orElseThrow(() -> new EntityNotFoundException("Financeiro com id: " + id + " não encontrado"));
     }
 }

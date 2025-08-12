@@ -45,9 +45,8 @@ public class TransacaoController {
     })
     @GetMapping
     public ResponseEntity<Page<TransacaoResponseDTO>> listarTodos(@PageableDefault(size = 10, page = 0, sort = {"id"}) Pageable paginacao) {
-        Page<Transacao> transacoes = transacaoService.listarTodos(paginacao);
-        Page<TransacaoResponseDTO> dtoPage = transacoes.map(TransacaoMapper::toDTO);
-        return ResponseEntity.ok(dtoPage);
+        var transacoes = transacaoService.listarTodos(paginacao);
+        return ResponseEntity.ok(transacoes);
     }
 
     @Operation(summary = "Buscar transação por ID")
@@ -56,18 +55,18 @@ public class TransacaoController {
             @ApiResponse(responseCode = "404", description = "Transação não encontrada", content = @Content)
     })
     @GetMapping("/{id}")
-    public ResponseEntity buscarPorId(@PathVariable Long id) {
-        var transacao = TransacaoMapper.toDTO(transacaoService.buscarPorId(id));
+    public ResponseEntity<TransacaoResponseDTO> buscarPorId(@PathVariable Long id) {
+        var transacao = transacaoService.buscarDTOPorId(id);
         return ResponseEntity.ok(transacao);
     }
 
     @Operation(summary = "Cadastrar uma nova transação")
     @ApiResponse(responseCode = "201", description = "Transação criada com sucesso")
     @PostMapping
-    public ResponseEntity salvar(@RequestBody @Valid TransacaoRequestDTO dto, UriComponentsBuilder uriBuilder){
-        Financeiro financeiro = financeiroService.buscarPorId(dto.getIdFinanceiro());
+    public ResponseEntity<TransacaoResponseDTO> salvar(@RequestBody @Valid TransacaoRequestDTO dto, UriComponentsBuilder uriBuilder){
+        Financeiro financeiro = financeiroService.buscarEntidadePorId(dto.getIdFinanceiro());
         Transacao transacao = TransacaoMapper.toEntity(dto, financeiro);
-        var transacaoSalva = TransacaoMapper.toDTO(transacaoService.salvar(transacao));
+        var transacaoSalva = transacaoService.salvar(transacao);
 
         var uri = uriBuilder.path("/api/transacoes/{id}").buildAndExpand(transacaoSalva.getId()).toUri();
 
@@ -76,23 +75,19 @@ public class TransacaoController {
 
     @Operation(summary = "Atualizar uma transação existente")
     @PutMapping("/{id}")
-    public ResponseEntity atualizar(@PathVariable Long id, @RequestBody @Valid TransacaoRequestDTO dto){
-        Financeiro financeiro = financeiroService.buscarPorId(dto.getIdFinanceiro());
+    public ResponseEntity<TransacaoResponseDTO> atualizar(@PathVariable Long id, @RequestBody @Valid TransacaoRequestDTO dto){
+        Financeiro financeiro = financeiroService.buscarEntidadePorId(dto.getIdFinanceiro());
         Transacao transacao = TransacaoMapper.toEntity(dto, financeiro);
-        transacao.setId(id);
 
-        Transacao atualizado = transacaoService.atualizar(id,transacao);
-        TransacaoResponseDTO responseDTO = TransacaoMapper.toDTO(atualizado);
+        var transacaoAtualizada = transacaoService.atualizar(id,transacao);
 
-        return ResponseEntity.ok(responseDTO);
+        return ResponseEntity.ok(transacaoAtualizada);
     }
-
 
     @Operation(summary = "Deletar uma transação")
     @DeleteMapping("/{id}")
-    public ResponseEntity deletar(@PathVariable Long id){
+    public ResponseEntity<Void> deletar(@PathVariable Long id){
         transacaoService.deletar(id);
-
         return ResponseEntity.noContent().build();
     }
 }

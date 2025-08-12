@@ -5,6 +5,7 @@ import com.lifeboard.dto.FinanceiroResponseDTO;
 import com.lifeboard.mapper.FinanceiroMapper;
 import com.lifeboard.model.Financeiro;
 import com.lifeboard.model.Usuario;
+import com.lifeboard.repository.UsuarioRepository;
 import com.lifeboard.service.FinanceiroService;
 import com.lifeboard.service.UsuarioService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -14,6 +15,7 @@ import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
+import jakarta.persistence.EntityNotFoundException;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
@@ -42,9 +44,8 @@ public class FinanceiroController {
     })
     @GetMapping
     public ResponseEntity<Page<FinanceiroResponseDTO>> listarTodos(@PageableDefault(size = 10, page = 0, sort = {"id"}) Pageable paginacao) {
-        Page<Financeiro> financeiros = financeiroService.listarTodos(paginacao);
-        Page<FinanceiroResponseDTO> dtoPage = financeiros.map(FinanceiroMapper::toDTO);
-        return ResponseEntity.ok(dtoPage);
+        var financeiros = financeiroService.listarTodos(paginacao);
+        return ResponseEntity.ok(financeiros);
     }
 
     @Operation(summary = "Buscar financeiro por ID")
@@ -53,18 +54,19 @@ public class FinanceiroController {
             @ApiResponse(responseCode = "404", description = "Financeiro não encontrado", content = @Content)
     })
     @GetMapping("/{id}")
-    public ResponseEntity buscarPorId(@PathVariable Long id) {
-        var financeiro = FinanceiroMapper.toDTO(financeiroService.buscarPorId(id));
+    public ResponseEntity<FinanceiroResponseDTO> buscarPorId(@PathVariable Long id) {
+        var financeiro = financeiroService.buscarDTOPorId(id);
         return ResponseEntity.ok(financeiro);
     }
 
     @Operation(summary = "Cadastrar um novo financeiro")
     @ApiResponse(responseCode = "201", description = "Financeiro criado com sucesso")
     @PostMapping
-    public ResponseEntity salvar(@RequestBody @Valid FinanceiroRequestDTO dto, UriComponentsBuilder uriBuilder){
-        Usuario usuario = usuarioService.buscarPorId(dto.getUsuarioId());
+    public ResponseEntity<FinanceiroResponseDTO> salvar(@RequestBody @Valid FinanceiroRequestDTO dto, UriComponentsBuilder uriBuilder){
+        var usuario = usuarioService.buscarEntidadePorId(dto.getUsuarioId());
+
         Financeiro financeiro = FinanceiroMapper.toEntity(dto, usuario);
-        var financeiroSalvo = FinanceiroMapper.toDTO(financeiroService.salvar(financeiro));
+        var financeiroSalvo = financeiroService.salvar(financeiro);
 
         var uri = uriBuilder.path("/api/financeiros/{id}").buildAndExpand(financeiroSalvo.getId()).toUri();
 
@@ -73,25 +75,20 @@ public class FinanceiroController {
 
     @Operation(summary = "Atualizar um financeiro existente")
     @PutMapping("/{id}")
-    public ResponseEntity atualizar(@PathVariable Long id, @RequestBody @Valid FinanceiroRequestDTO dto){
-        Usuario usuario = usuarioService.buscarPorId(dto.getUsuarioId());
+    public ResponseEntity<FinanceiroResponseDTO> atualizar(@PathVariable Long id, @RequestBody @Valid FinanceiroRequestDTO dto){
+        var usuario = usuarioService.buscarEntidadePorId(dto.getUsuarioId());
 
-        Financeiro existente = financeiroService.buscarPorId(id);
+        Financeiro novoFinanceiro = FinanceiroMapper.toEntity(dto, usuario);
 
-        existente.setSaldoAtual(dto.getSaldoAtual());
-        existente.setSalarioMensal(dto.getSalarioMensal());
-        existente.setUsuario(usuario);
+        var financeiroAtualizado = financeiroService.atualizar(id, novoFinanceiro);
 
-        Financeiro atualizado = financeiroService.atualizar(id, existente);
-
-        return ResponseEntity.ok(FinanceiroMapper.toDTO(atualizado));
+        return ResponseEntity.ok(financeiroAtualizado);
     }
 
     @Operation(summary = "Deletar um financeiro")
     @DeleteMapping("/{id}")
-    public ResponseEntity deletar(@PathVariable Long id){
+    public ResponseEntity<Void> deletar(@PathVariable Long id){
         financeiroService.deletar(id);
-
         return ResponseEntity.noContent().build();
     }
 }

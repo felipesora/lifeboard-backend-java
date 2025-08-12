@@ -45,9 +45,8 @@ public class MetaFinanceiraController {
     })
     @GetMapping
     public ResponseEntity<Page<MetaFinanceiraResponseDTO>> listarTodos(@PageableDefault(size = 10, page = 0, sort = {"id"}) Pageable paginacao) {
-        Page<MetaFinanceira> metas = metaFinanceiraService.listarTodos(paginacao);
-        Page<MetaFinanceiraResponseDTO> dtoPage = metas.map(MetaFinanceiraMapper::toDTO);
-        return ResponseEntity.ok(dtoPage);
+        var metas = metaFinanceiraService.listarTodos(paginacao);
+        return ResponseEntity.ok(metas);
     }
 
     @Operation(summary = "Buscar meta financeira por ID")
@@ -56,19 +55,19 @@ public class MetaFinanceiraController {
             @ApiResponse(responseCode = "404", description = "Meta financeira não encontrada", content = @Content)
     })
     @GetMapping("/{id}")
-    public ResponseEntity buscarPorId(@PathVariable Long id) {
-        var meta = MetaFinanceiraMapper.toDTO(metaFinanceiraService.buscarPorId(id));
+    public ResponseEntity<MetaFinanceiraResponseDTO> buscarPorId(@PathVariable Long id) {
+        var meta = metaFinanceiraService.buscarDTOPorId(id);
         return ResponseEntity.ok(meta);
     }
 
     @Operation(summary = "Cadastrar uma nova meta financeira")
     @ApiResponse(responseCode = "201", description = "Meta financeira criada com sucesso")
     @PostMapping
-    public ResponseEntity salvar(@RequestBody @Valid MetaFinanceiraSaveRequestDTO dto, UriComponentsBuilder uriBuilder){
-        Financeiro financeiro = financeiroService.buscarPorId(dto.getIdFinanceiro());
+    public ResponseEntity<MetaFinanceiraResponseDTO> salvar(@RequestBody @Valid MetaFinanceiraSaveRequestDTO dto, UriComponentsBuilder uriBuilder){
+        Financeiro financeiro = financeiroService.buscarEntidadePorId(dto.getIdFinanceiro());
         MetaFinanceira meta = MetaFinanceiraMapper.toEntitySave(dto, financeiro);
 
-        var metaSalva = MetaFinanceiraMapper.toDTO(metaFinanceiraService.salvar(meta));
+        var metaSalva = metaFinanceiraService.salvar(meta);
 
         var uri = uriBuilder.path("/api/metas/{id}").buildAndExpand(metaSalva.getId()).toUri();
 
@@ -85,7 +84,7 @@ public class MetaFinanceiraController {
             @ApiResponse(responseCode = "400", description = "Dados inválidos", content = @Content)
     })
     @PostMapping("/{id}/adicionar-saldo")
-    public ResponseEntity<?> adicionarSaldo(@PathVariable Long id, @RequestBody @Valid SaldoRequest saldoRequest) {
+    public ResponseEntity<Void> adicionarSaldo(@PathVariable Long id, @RequestBody @Valid SaldoRequest saldoRequest) {
         metaFinanceiraService.adicionarSaldo(id, saldoRequest.valor());
         return ResponseEntity.ok().build();
     }
@@ -100,29 +99,27 @@ public class MetaFinanceiraController {
             @ApiResponse(responseCode = "400", description = "Dados inválidos ou saldo insuficiente", content = @Content)
     })
     @PostMapping("/{id}/retirar-saldo")
-    public ResponseEntity<?> retirarSaldo(@PathVariable Long id, @RequestBody @Valid SaldoRequest saldoRequest) {
+    public ResponseEntity<Void> retirarSaldo(@PathVariable Long id, @RequestBody @Valid SaldoRequest saldoRequest) {
         metaFinanceiraService.retirarSaldo(id, saldoRequest.valor());
         return ResponseEntity.ok().build();
     }
 
     @Operation(summary = "Atualizar uma meta financeira")
     @PutMapping("/{id}")
-    public ResponseEntity atualizar(@PathVariable Long id, @RequestBody @Valid MetaFinanceiraUpdateRequestDTO dto){
-        Financeiro financeiro = financeiroService.buscarPorId(dto.getIdFinanceiro());
+    public ResponseEntity<MetaFinanceiraResponseDTO> atualizar(@PathVariable Long id, @RequestBody @Valid MetaFinanceiraUpdateRequestDTO dto){
+        Financeiro financeiro = financeiroService.buscarEntidadePorId(dto.getIdFinanceiro());
         MetaFinanceira meta = MetaFinanceiraMapper.toEntityUpdate(dto, financeiro);
         meta.setId(id);
 
-        MetaFinanceira atualizado = metaFinanceiraService.atualizar(id,meta);
-        MetaFinanceiraResponseDTO responseDTO = MetaFinanceiraMapper.toDTO(atualizado);
+        var metaAtualizada = metaFinanceiraService.atualizar(id,meta);
 
-        return ResponseEntity.ok(responseDTO);
+        return ResponseEntity.ok(metaAtualizada);
     }
 
     @Operation(summary = "Deletar uma meta financeira")
     @DeleteMapping("/{id}")
-    public ResponseEntity deletar(@PathVariable Long id){
+    public ResponseEntity<Void> deletar(@PathVariable Long id){
         metaFinanceiraService.deletar(id);
-
         return ResponseEntity.noContent().build();
     }
 }

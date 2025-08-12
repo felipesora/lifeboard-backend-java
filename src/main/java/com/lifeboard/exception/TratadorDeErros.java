@@ -27,6 +27,16 @@ public class TratadorDeErros {
         return ResponseEntity.status(HttpStatus.NOT_FOUND).body(body);
     }
 
+    // 400 - Bad Request customizado
+    @ExceptionHandler(BadRequestException.class)
+    public ResponseEntity<?> tratarBadRequest(BadRequestException ex) {
+        var body = Map.of(
+                "error", "Requisição inválida",
+                "message", ex.getMessage()
+        );
+        return ResponseEntity.badRequest().body(body);
+    }
+
     // 400 - Erro de parâmetro
     @ExceptionHandler(MethodArgumentTypeMismatchException.class)
     public ResponseEntity<?> tratarErroTipoDeParametro() {
@@ -44,39 +54,6 @@ public class TratadorDeErros {
         return ResponseEntity.badRequest().body(erros);
     }
 
-    @ExceptionHandler(SaldoInsuficienteException.class)
-    public ResponseEntity<?> tratarSaldoInsuficiente(SaldoInsuficienteException ex) {
-        var body = Map.of(
-                "error", "Saldo insuficiente",
-                "message", ex.getMessage()
-        );
-        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(body);
-    }
-
-    @ExceptionHandler(RegraNegocioException.class)
-    public ResponseEntity<?> tratarRegraNegocio(RegraNegocioException ex) {
-        var body = Map.of(
-                "error", "Erro de regra de negócio",
-                "message", ex.getMessage()
-        );
-        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(body);
-    }
-
-    @ExceptionHandler(BadCredentialsException.class)
-    public ResponseEntity tratarErroBadCredentials() {
-        return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Credenciais inválidas");
-    }
-
-    @ExceptionHandler(AuthenticationException.class)
-    public ResponseEntity tratarErroAuthentication() {
-        return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Falha na autenticação");
-    }
-
-    @ExceptionHandler(AccessDeniedException.class)
-    public ResponseEntity tratarErroAcessoNegado() {
-        return ResponseEntity.status(HttpStatus.FORBIDDEN).body("Acesso negado");
-    }
-
     // 500 - Erro genérico inesperado
     @ExceptionHandler(Exception.class)
     public ResponseEntity<?> tratarErro500(Exception ex) {
@@ -91,6 +68,5 @@ public class TratadorDeErros {
         public DadosErroValidacao(FieldError erro){
             this(erro.getField(), erro.getDefaultMessage());
         }
-
     }
 }
