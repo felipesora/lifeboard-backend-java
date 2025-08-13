@@ -163,9 +163,12 @@ public class TransacaoService {
         }
 
         financeiro.setSaldoAtual(saldoAtual);
-        financeiroService.atualizar(financeiro.getId(), financeiro);
+//        financeiroService.atualizar(financeiro.getId(), financeiro);
 
-        transacaoRepository.deleteById(id);
+        financeiro.getTransacoes().remove(transacao);
+
+        transacaoRepository.delete(transacao);
+        transacaoRepository.flush();
     }
 
     public Transacao buscarEntidadePorId(Long id) {
