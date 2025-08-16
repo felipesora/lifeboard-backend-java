@@ -79,6 +79,7 @@ public class MetaFinanceiraService {
         }
 
         meta.setValorAtual(meta.getValorAtual().add(valor));
+        definirStatusMetaFinanceiro(meta);
         metaRepository.save(meta);
 
         Transacao transacao = new Transacao();
@@ -106,6 +107,7 @@ public class MetaFinanceiraService {
         }
 
         meta.setValorAtual(meta.getValorAtual().subtract(valor));
+        definirStatusMetaFinanceiro(meta);
         metaRepository.save(meta);
 
         Financeiro financeiro = meta.getFinanceiro();
