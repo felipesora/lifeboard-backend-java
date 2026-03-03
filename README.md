@@ -56,9 +56,9 @@ Arquivo:
 `src/main/resources/application.properties`
 
 ```properties
-spring.datasource.url=jdbc:postgresql://localhost:5432/lifeboard
-spring.datasource.username=postgres
-spring.datasource.password=root
+spring.datasource.url=${DB_URL}
+spring.datasource.username=${DB_USER}
+spring.datasource.password=${DB_PASSWORD}
 spring.datasource.driver-class-name=org.postgresql.Driver
 
 spring.jpa.hibernate.ddl-auto=update
