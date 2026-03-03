@@ -15,7 +15,7 @@ O **LifeBoard Backend** é uma API REST desenvolvida em **Java 21 + Spring Boot*
 - **Spring Boot**
 - **Spring Security + JWT**
 - **Spring Data JPA / Hibernate**
-- **Oracle Database**
+- **PostgreSQL Database**
 - **Bean Validation**
 - **SpringDoc / Swagger (OpenAPI)**
 - **Lombok**
@@ -44,7 +44,7 @@ Certifique-se de ter instalado:
 
 - Java 21
 - Maven 3.9+
-- Oracle Database (local ou container)
+- PostgreSQL Database (local ou container)
 - IDE de sua preferência (IntelliJ, Eclipse, VS Code)
 
 ---
@@ -61,6 +61,11 @@ spring.datasource.username=${ORCL_USERNAME}
 spring.datasource.password=${ORCL_PASSWORD}
 spring.datasource.driver-class-name=oracle.jdbc.driver.OracleDriver
 
+spring.datasource.url=jdbc:postgresql://localhost:5432/lifeboard
+spring.datasource.username=postgres
+spring.datasource.password=root
+spring.datasource.driver-class-name=org.postgresql.Driver
+
 spring.jpa.hibernate.ddl-auto=update
 spring.jpa.show-sql=true
 spring.jpa.properties.hibernate.format_sql=true
@@ -70,7 +75,7 @@ api.security.token.secret=${JWT_SECRET}
 
 📌 Observações:
 
-- Configure as variáveis de ambiente conforme sua instalação Oracle.
+- Configure as variáveis de ambiente conforme sua instalação PostgreSQL.
 - Em produção, prefira ddl-auto=validate.
 - Use uma chave JWT forte.
 
@@ -121,30 +126,6 @@ Para executar:
 ```properties
 mvn test
 ```
-
----
-
-## 🚀 Deploy
-
-O LifeBoard está disponível publicamente em produção, permitindo acesso tanto à aplicação web quanto à API backend.
-
-### 🖥️ Aplicação Web (Frontend)
-
-A interface do LifeBoard pode ser acessada online pelo link abaixo:
-
-[https://lifeboard-frontend.vercel.app/](https://lifeboard-frontend.vercel.app/)
-
-### 🛠️ API REST (Backend)
-
-A API do LifeBoard está publicada e documentada para consumo externo:
-
-**Base URL da API**
-
-[https://lifeboard-backend-cv3r.onrender.com](https://lifeboard-backend-cv3r.onrender.com)
-
-**Swagger / OpenAPI**
-
-[https://lifeboard-backend-cv3r.onrender.com/swagger-ui/index.html](https://lifeboard-backend-cv3r.onrender.com/swagger-ui/index.html)
 
 ---
 
