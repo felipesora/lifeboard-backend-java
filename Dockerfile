@@ -1,24 +1,26 @@
-# Etapa de build: Java 21 + Maven
-FROM eclipse-temurin:21-jdk AS build
-
-# Instala o Maven
-RUN apt-get update && apt-get install -y maven
+# ====== STAGE 1: Build ======
+FROM maven:3.9.6-eclipse-temurin-21 AS build
 
 WORKDIR /app
 
+# Copia apenas arquivos necessários primeiro (melhora cache)
 COPY pom.xml .
 COPY src ./src
 
-# Executa o build
-RUN mvn clean install -DskipTests
+# Gera o jar
+RUN mvn clean package -DskipTests
 
-# Etapa de runtime: imagem menor só com Java
-FROM eclipse-temurin:21-jdk-jammy
+
+# ====== STAGE 2: Runtime ======
+FROM eclipse-temurin:21-jdk
 
 WORKDIR /app
 
+# Copia o jar gerado do stage anterior
 COPY --from=build /app/target/*.jar app.jar
 
+# Expõe a porta do Spring
 EXPOSE 8080
 
+# Executa aplicação
 ENTRYPOINT ["java", "-jar", "app.jar"]

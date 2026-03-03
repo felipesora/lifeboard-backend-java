@@ -56,11 +56,6 @@ Arquivo:
 `src/main/resources/application.properties`
 
 ```properties
-spring.datasource.url=${ORCL_URL}
-spring.datasource.username=${ORCL_USERNAME}
-spring.datasource.password=${ORCL_PASSWORD}
-spring.datasource.driver-class-name=oracle.jdbc.driver.OracleDriver
-
 spring.datasource.url=jdbc:postgresql://localhost:5432/lifeboard
 spring.datasource.username=postgres
 spring.datasource.password=root
